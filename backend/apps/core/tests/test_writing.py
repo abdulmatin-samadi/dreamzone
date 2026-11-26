@@ -52,7 +52,10 @@ class WritingFlowTests(TestCase):
         self.assertTrue(res.writing_pending)
         self.assertEqual(float(res.total_score), 1.0)                       # only the auto-graded part so far
         self.assertEqual(res.approval_status, ApprovalStatus.NOT_REQUIRED)  # no decision before the writing is scored
-        self.assertEqual(c.get(f"{API}/results/{res.id}/").json()["writing"][0]["needs_review"], True)
+        mine = c.get(f"{API}/results/{res.id}/").json()  # the student sees no points at all
+        self.assertEqual((mine["writing"], mine["total_score"], mine["correct_count"], mine["passed"]), ([], None, None, None))
+        self.assertEqual(c.get(f"{API}/results/{res.id}/export/").status_code, 403)
+        self.assertEqual(client_for(self.teacher).get(f"{API}/results/{res.id}/").json()["writing"][0]["needs_review"], True)
 
         tc = client_for(self.teacher)
         url = f"{API}/results/{res.id}/grade-writing/"
@@ -66,8 +69,9 @@ class WritingFlowTests(TestCase):
         self.assertEqual((float(res.total_score), float(res.max_score)), (8.0, 11.0))
         self.assertTrue(res.passed)                                          # 72.7 % >= 50 %
         self.assertEqual(res.approval_status, ApprovalStatus.PENDING)      # now the teacher can approve the level change
-        # the student sees the score and the feedback; a second grading is refused
-        done = c.get(f"{API}/results/{res.id}/").json()["writing"][0]
+        # staff see the score and the feedback (the student does not); a second grading is refused
+        self.assertEqual(c.get(f"{API}/results/{res.id}/").json()["writing"], [])
+        done = tc.get(f"{API}/results/{res.id}/").json()["writing"][0]
         self.assertEqual((done["points"], done["feedback"], done["needs_review"]), (7.0, "Good, check the tenses.", False))
         self.assertEqual(tc.post(url, {"grades": [{"question_id": w.id, "points": 9}]}, format="json").json()["code"], "writing_not_pending")
 

@@ -63,8 +63,8 @@ export interface AttemptPayload {
 export interface SectionScore { score: number; max: number; correct: number; total: number; percentage: number }
 export interface Result {
   id: number; student: number; student_name: string; student_phone: string; examination: number; examination_title: string;
-  kind: ExamKind; level_code: string; target_level_code: string | null; total_score: string; max_score: string;
-  percentage: string; correct_count: number; incorrect_count: number; unanswered_count: number; passed: boolean | null;  // null: student, upgrade not decided yet
+  kind: ExamKind; level_code: string; target_level_code: string | null; total_score: string | null; max_score: string | null;  // null for the student: points are staff-only
+  percentage: string | null; correct_count: number | null; incorrect_count: number | null; unanswered_count: number | null; passed: boolean | null;  // null: student, upgrade not decided yet
   recommendation: "NONE" | "CONFIRM" | "LOWER" | "HIGHER"; recommended_level_code: string | null;
   offer_status: "NONE" | "PENDING" | "ACCEPTED" | "DECLINED"; placed_level_code: string | null;
   approval_status: "NOT_REQUIRED" | "PENDING" | "APPROVED" | "REJECTED"; teacher_name: string | null;

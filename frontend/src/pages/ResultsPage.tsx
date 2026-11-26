@@ -65,11 +65,13 @@ function StudentHistory({ rows }: { rows: Result[] }) {
               <OutcomeBadge r={r} />
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-              <Fact label={t("result.score")} value={<span className="text-lg">{num(r.total_score)} / {num(r.max_score)} {t("exam.points")}</span>} />
-              <Fact label={t("history.answers")} value={<><span className="text-emerald-700">✓ {r.correct_count}</span> · <span className="text-red-600">✗ {r.incorrect_count}</span> · <span className="text-slate-500">— {r.unanswered_count}</span></>} />
+              {r.total_score !== null && <>
+                <Fact label={t("result.score")} value={<span className="text-lg">{num(r.total_score)} / {num(r.max_score)} {t("exam.points")}</span>} />
+                <Fact label={t("history.answers")} value={<><span className="text-emerald-700">✓ {r.correct_count}</span> · <span className="text-red-600">✗ {r.incorrect_count}</span> · <span className="text-slate-500">— {r.unanswered_count}</span></>} />
+              </>}
               <Fact label={t("history.when")} value={fmtDate(r.started_at)} />
               <Fact label={t("history.spent")} value={spent(r.started_at, r.finished_at)} />
-              {r.speaking_score !== null && <Fact label={t("sections.SPEAKING")} value={`${num(r.speaking_score)} / ${num(r.speaking_max ?? 0)} ${t("exam.points")}`} />}
+              {r.speaking_score != null && <Fact label={t("sections.SPEAKING")} value={`${num(r.speaking_score)} / ${num(r.speaking_max ?? 0)} ${t("exam.points")}`} />}
             </div>
             <div className={`mt-4 rounded-xl px-4 py-3 text-sm font-medium ${!decided ? "bg-amber-50 text-amber-900" : r.passed ? "bg-emerald-50 text-emerald-900" : "bg-red-50 text-red-800"}`}>
               {verdict}

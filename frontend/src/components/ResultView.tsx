@@ -5,7 +5,7 @@ import type { ResultDetail, ReviewItem, WritingItem } from "../api/types";
 import { ApprovalBadge, OutcomeBadge } from "./badges";
 import { Badge, Button, Card, ProgressBar, Textarea, cx } from "./ui";
 
-const fmt = (v: string | number) => Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
+const fmt = (v: string | number | null) => v === null ? "—" : Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
 
 function AnswerText({ v }: { v: ReviewItem["student_answer"] | ReviewItem["correct_answer"] }) {
   const { t } = useTranslation();
@@ -105,15 +105,23 @@ export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, sta
   const { t } = useTranslation();
   const upgrade = result.kind === "UPGRADE";
   const pending = result.offer_status === "PENDING" && !!result.recommended_level_code;
+  const noPoints = result.total_score === null;  // a student: points and right / wrong counts are not shown
 
   return (
     <div className="space-y-5">
       <Card>
         <div className="flex flex-col items-center gap-6 sm:flex-row">
-          <div className={cx("flex h-32 w-32 shrink-0 flex-col items-center justify-center rounded-full border-8", result.passed ? "border-emerald-400 text-emerald-700" : "border-red-300 text-red-600")}>
-            <span className="text-3xl font-bold tabular-nums">{fmt(result.total_score)}</span>
-            <span className="text-xs">/ {fmt(result.max_score)} {t("exam.points")}</span>
-          </div>
+          {noPoints ? (
+            <div className={cx("flex h-32 w-32 shrink-0 items-center justify-center rounded-full border-8 text-5xl font-bold",
+              result.passed === null || result.writing_pending ? "border-amber-300 text-amber-500" : result.passed ? "border-emerald-400 text-emerald-600" : "border-red-300 text-red-500")}>
+              {result.passed === null || result.writing_pending ? "…" : result.passed ? "✓" : "✗"}
+            </div>
+          ) : (
+            <div className={cx("flex h-32 w-32 shrink-0 flex-col items-center justify-center rounded-full border-8", result.passed ? "border-emerald-400 text-emerald-700" : "border-red-300 text-red-600")}>
+              <span className="text-3xl font-bold tabular-nums">{fmt(result.total_score)}</span>
+              <span className="text-xs">/ {fmt(result.max_score)} {t("exam.points")}</span>
+            </div>
+          )}
           <div className="flex-1 text-center sm:text-left">
             <h2 className="text-xl font-semibold">{result.examination_title}</h2>
             <p className="mt-1 text-sm text-slate-500">
@@ -121,9 +129,11 @@ export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, sta
             </p>
             <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
               <OutcomeBadge r={result} />
-              <Badge tone="green">{t("result.correct")}: {result.correct_count}</Badge>
-              <Badge tone="red">{t("result.incorrect")}: {result.incorrect_count}</Badge>
-              <Badge>{t("result.unanswered")}: {result.unanswered_count}</Badge>
+              {!noPoints && <>
+                <Badge tone="green">{t("result.correct")}: {result.correct_count}</Badge>
+                <Badge tone="red">{t("result.incorrect")}: {result.incorrect_count}</Badge>
+                <Badge>{t("result.unanswered")}: {result.unanswered_count}</Badge>
+              </>}
               {result.attempt_status === "AUTO_SUBMITTED" && <Badge tone="amber">{t("result.autoSubmitted")}</Badge>}
             </div>
           </div>
@@ -134,7 +144,7 @@ export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, sta
         <Card className="border-amber-200 bg-amber-50"><p className="text-sm text-amber-900">{t("result.writingPendingNote")}</p></Card>
       )}
 
-      {staff && <Card title={t("result.sections")}>
+      {staff && result.section_scores && <Card title={t("result.sections")}>
         <ul className="space-y-4">
           {Object.entries(result.section_scores).map(([name, s]) => (
             <li key={name}>
@@ -148,7 +158,7 @@ export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, sta
         </ul>
       </Card>}
 
-      {/* the student sees the score, not the per-section breakdown or the written answers */}
+      {/* the student sees only the outcome: no points, no per-section breakdown, no written answers */}
       {staff && result.writing?.length > 0 && <WritingBlock items={result.writing} onGrade={onGrade} busy={gradeBusy}
         whoChecks={staff ? (upgrade ? "result.checkingTeacher" : "result.checkingDesk") : undefined} />}
 

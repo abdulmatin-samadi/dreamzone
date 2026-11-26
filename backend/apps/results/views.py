@@ -109,9 +109,10 @@ class ResultViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.G
             "assignment_id": assignment.id if assignment else None,
         })
 
-    # ---- exports
+    # ---- exports (staff only: the files carry points, which students do not see)
     @action(detail=False, methods=["get"])
     def export(self, request):
+        _no_students(request)
         results = list(self.filter_queryset(self.get_queryset()))
         kind = request.query_params.get("file", "xlsx")
         if kind == "pdf":
@@ -123,6 +124,7 @@ class ResultViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.G
 
     @action(detail=True, methods=["get"], url_path="export")
     def export_report(self, request, pk=None):
+        _no_students(request)
         result = self.get_object()
         hide = request.user.role == Role.STUDENT and awaiting_decision(result)
         return _download(exports.result_report_pdf(result, hide_decision=hide), f"result-{result.pk}.pdf", "application/pdf")
@@ -132,3 +134,10 @@ def _download(content, name, ctype):
     resp = HttpResponse(content, content_type=ctype)
     resp["Content-Disposition"] = f'attachment; filename="{name}"'
     return resp
+
+
+def _no_students(request):
+    from rest_framework.exceptions import PermissionDenied
+
+    if request.user.role == Role.STUDENT:
+        raise PermissionDenied()

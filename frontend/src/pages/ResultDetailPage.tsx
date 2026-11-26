@@ -66,7 +66,7 @@ export default function ResultDetailPage() {
     <>
       <PageHeader title={t("result.title")} actions={<>
         {role !== "ADMIN" && role !== "TEACHER" && <Button variant="secondary" onClick={() => nav(-1)}>{t("common.back")}</Button>}  {/* staff: the layout's back button */}
-        {role !== "RECEPTIONIST" && <Button variant="secondary" onClick={() => download(`/results/${r.id}/export/`, {}, `result-${r.id}.pdf`)}>PDF</Button>}
+        {role !== "RECEPTIONIST" && role !== "STUDENT" && <Button variant="secondary" onClick={() => download(`/results/${r.id}/export/`, {}, `result-${r.id}.pdf`)}>PDF</Button>}
         {canReview && <><Button variant="success" onClick={() => setReview("approve")}>{t("approvals.approve")}</Button><Button variant="danger" onClick={() => setReview("reject")}>{t("approvals.reject")}</Button></>}
         {role === "ADMIN" && r.kind === "UPGRADE" && r.is_locked && <Button variant="secondary" onClick={() => setOverride(true)}>{t("approvals.override")}</Button>}
       </>} />

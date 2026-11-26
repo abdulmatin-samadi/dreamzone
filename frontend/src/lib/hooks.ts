@@ -44,4 +44,4 @@ export const fmtDate = (s: string | null | undefined, withTime = true) =>
 
 export const toLocalInput = (s: string | null) => (s ? new Date(new Date(s).getTime() - new Date(s).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "");
 export const fromLocalInput = (s: string) => (s ? new Date(s).toISOString() : null);
-export const num = (v: string | number) => Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
+export const num = (v: string | number | null) => v === null ? "—" : Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
