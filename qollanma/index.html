@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dreamzone — to'liq rasmli qo'llanma</title>
+<style>
+  :root { --blue:#0a8cf5; --ink:#14284d; --muted:#5b6b86; --bg:#f4f9ff; --card:#fff; --red:#ef4444; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:17px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--ink); background:var(--bg); }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 34px; margin: 0 0 6px; }
+  .lead { color:var(--muted); margin: 0 0 28px; }
+  .step { background:var(--card); border-radius:20px; padding:24px; margin: 0 0 28px; box-shadow:0 6px 24px -10px rgba(10,60,140,.25); }
+  .step h2 { margin:0 0 6px; font-size:24px; display:flex; gap:12px; align-items:center; }
+  .num { flex:none; width:40px; height:40px; border-radius:50%; background:var(--red); color:#fff; display:grid; place-items:center; font-weight:700; }
+  .step p { margin: 6px 0 14px; }
+  img { width:100%; border-radius:14px; border:1px solid #dbe6f5; display:block; }
+  .tip { background:#fff7e0; border-left:5px solid #f5b301; padding:12px 16px; border-radius:10px; margin-top:14px; }
+  .ok  { background:#e8f8ee; border-left:5px solid #22a559; padding:12px 16px; border-radius:10px; margin-top:14px; }
+  .cols { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  @media (max-width:760px){ .cols{ grid-template-columns:1fr; } }
+  pre { margin:0; padding:14px 16px; border-radius:12px; font:15px/1.7 ui-monospace, Menlo, monospace; white-space:pre-wrap; border:2px solid; }
+  .c1 { background:#e8f2ff; border-color:#0a8cf5; } .c2 { background:#f3e8ff; border-color:#9b51e0; } .c3 { background:#e8f8ee; border-color:#22a559; } .c4 { background:#fff0e0; border-color:#f08a24; }
+  .label { font-weight:700; margin:0 0 6px; }
+  table { width:100%; border-collapse: collapse; font-size:16px; }
+  td, th { padding:8px 10px; border-bottom:1px solid #e3ecf8; text-align:left; vertical-align:top; }
+  th { color:var(--muted); font-weight:600; }
+  h3 { margin:18px 0 6px; font-size:19px; }
+  code { background:#eef3fb; padding:1px 6px; border-radius:6px; }
+  .toc { background:var(--card); border-radius:20px; padding:20px 24px; margin:0 0 28px; box-shadow:0 6px 24px -10px rgba(10,60,140,.25); }
+  .toc ol { margin:8px 0 0; padding-left:22px; columns:2; } @media (max-width:760px){ .toc ol{ columns:1; } }
+  .toc a { color:#0872d1; text-decoration:none; } .toc a:hover { text-decoration:underline; }
+  h2.chapter { font-size:28px; margin:46px 0 16px; padding-bottom:8px; border-bottom:3px solid #0a8cf5; }
+  .flow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:12px 0 4px; }
+  .flow span { background:#e8f2ff; border:2px solid #0a8cf5; border-radius:12px; padding:8px 12px; font-weight:600; }
+  .flow i { font-style:normal; color:#0872d1; font-weight:700; }
+  details { margin-top:10px; } summary { cursor:pointer; font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Dreamzone: to'liq rasmli qo'llanma</h1>
+  <p class="lead">Sayt qanday ishlashi va har bir rol nima qilishi, qadamma-qadam, haqiqiy ekran rasmlari bilan. Qizil raqamlar rasmdagi bosiladigan joyni bildiradi.</p>
+
+  <nav class="toc">
+    <b>Mundarija</b>
+    <ol>
+      <li><a href="#umumiy">Tizim qanday ishlaydi</a></li>
+      <li><a href="#kirish">Kirish</a></li>
+      <li><a href="#admin">Admin: boshlang'ich sozlash</a></li>
+      <li><a href="#joylash">Savollarni imtihonga joylash</a></li>
+      <li><a href="#listen-write">Listening va Writing</a></li>
+      <li><a href="#resepshn">Resepshn: yangi o'quvchi testi</a></li>
+      <li><a href="#oqituvchi">O'qituvchi</a></li>
+      <li><a href="#oquvchi">O'quvchi: imtihon topshirish</a></li>
+      <li><a href="#savol-javob">Tez-tez uchraydigan savollar</a></li>
+    </ol>
+  </nav>
+
+  <h2 class="chapter" id="umumiy">Tizim qanday ishlaydi</h2>
+  <section class="step">
+    <p>To'rtta rol bor: <b>admin</b>, <b>resepshn</b>, <b>o'qituvchi</b> va <b>o'quvchi</b>. Asosiy yo'l:</p>
+    <div class="flow"><span>Yangi o'quvchi keladi</span><i>→</i><span>Saralash testi</span><i>→</i><span>Daraja aniqlanadi</span><i>→</i><span>Guruhga qo'shiladi</span><i>→</i><span>Darajani oshirish imtihoni</span><i>→</i><span>O'qituvchi tasdiqlaydi</span><i>→</i><span>Daraja oshadi</span></div>
+    <ul>
+      <li><b>Saralash testi:</b> yangi o'quvchi darajasini aniqlaydi. Har bir daraja uchun bitta test bor (Elementary, Pre-Intermediate, Intermediate, Pre-IELTS). Natijaga qarab tizim bir daraja pastroq yoki yuqoriroq testni taklif qilishi mumkin.</li>
+      <li><b>Darajani oshirish imtihoni:</b> hozirgi o'quvchi keyingi darajaga o'tish uchun topshiradi. O'tgan bo'lsa ham, daraja o'qituvchi <b>tasdiqlagandan</b> keyingina oshadi.</li>
+      <li><b>Har bir imtihon faqat bir marta topshiriladi.</b> Qayta topshirish yo'q. Sahifa yangilansa yoki internet uzilsa, o'quvchi xuddi shu imtihonni qolgan vaqt bilan davom ettiradi. Vaqt tugasa, imtihon o'zi topshiriladi.</li>
+    </ul>
+    <table>
+      <tr><th>Rol</th><th>Nima qiladi</th><th>Demo login</th></tr>
+      <tr><td>Admin</td><td>Hamma narsa: foydalanuvchilar, darajalar, guruhlar, imtihon va savollar, natijalar</td><td><code>admin</code> / <code>Admin12345!</code></td></tr>
+      <tr><td>Resepshn</td><td>Yangi o'quvchiga saralash testini o'tkazadi</td><td><code>reception</code> / <code>Demo12345!</code></td></tr>
+      <tr><td>O'qituvchi</td><td>O'z guruhlari va o'quvchilari, imtihon biriktirish, darajani tasdiqlash</td><td><code>teacher</code> / <code>Demo12345!</code></td></tr>
+      <tr><td>O'quvchi</td><td>Imtihon topshiradi, natijani ko'radi</td><td><code>student</code> / <code>Demo12345!</code></td></tr>
+    </table>
+    <div class="tip">Demo parollarni ish boshlashdan oldin almashtiring (Admin → Foydalanuvchilar → «Parolni tiklash»). Admin va o'qituvchi yuqoridagi <b>UZ / EN</b> tugmasi bilan tilni almashtiradi.</div>
+  </section>
+
+  <h2 class="chapter" id="kirish">Kirish</h2>
+  <section class="step">
+    <p>Saytni oching, login va parolni yozing, <b>Kirish</b> ni bosing. Yangi o'quvchi o'zi ham ro'yxatdan o'ta oladi.</p>
+    <img src="img/g00-kirish.png" alt="Kirish sahifasi">
+    <div class="tip">O'quvchining logini odatda <b>telefon raqami</b> (+ belgisiz). Parolni resepshn, o'qituvchi yoki admin ro'yxatga olayotganda bir marta ko'rsatadi, uni yozib oling.</div>
+  </section>
+
+  <h2 class="chapter" id="admin">Admin: boshlang'ich sozlash (bir marta)</h2>
+  <section class="step">
+    <h2><span class="num">1</span> O'qituvchilarni qo'shing</h2>
+    <p><b>O'qituvchilar</b> bo'limi → <b>+ O'qituvchi qo'shish</b>. Ism, telefon, login va parol kiritiladi. Jadvalda har bir o'qituvchining guruhlari, o'quvchilari va imtihonlari soni ko'rinadi.</p>
+    <img src="img/g01-oqituvchilar.png" alt="O'qituvchilar">
+  </section>
+  <section class="step">
+    <h2><span class="num">2</span> Darajalar va saralash testi</h2>
+    <p>Tizimda 4 daraja bor: Elementary, Pre-Intermediate, Intermediate, Pre-IELTS. Har birining saralash testi bor. Savollarini va chegaralarini <b>«Sozlash»</b> orqali o'zgartirasiz.</p>
+    <img src="img/g02-darajalar.png" alt="Darajalar">
+    <div class="tip">Imtihon sozlamalarida ikkita chegara bor: <b>quyi</b> (undan past bo'lsa, oldingi daraja testi taklif qilinadi) va <b>yuqori</b> (undan yuqori bo'lsa, keyingi daraja testi taklif qilinadi).</div>
+  </section>
+  <section class="step">
+    <h2><span class="num">3</span> Guruhlarni yarating</h2>
+    <p><b>Guruhlar</b> → <b>+ Guruh qo'shish</b>: nom, daraja va o'qituvchini tanlang. <b>A'zolar</b> orqali o'quvchilarni qo'shasiz.</p>
+    <img src="img/g03-guruhlar.png" alt="Guruhlar">
+  </section>
+  <section class="step">
+    <h2><span class="num">4</span> Imtihon yarating</h2>
+    <p><b>Imtihonlar</b> → <b>+ Imtihon yaratish</b>. Avval <b>turini</b> tanlang:</p>
+    <img src="img/g04-imtihon-yaratish.png" alt="Imtihon yaratish">
+    <ul>
+      <li><b>Darajani oshirish:</b> joriy va maqsad daraja kerak. O'qituvchi guruhlarga biriktiradi.</li>
+      <li><b>Saralash testi:</b> faqat admin yaratadi, har bir daraja uchun bittadan. Allaqachon bor, shuning uchun odatda uning savollarini o'zgartirasiz.</li>
+    </ul>
+    <p>Keyin <b>variant</b> yarating (A, B…), savollarni joylang (pastdagi bo'lim) va imtihonni <b>E'lon qilish</b> tugmasi bilan yoqing. E'lon qilinmagan imtihon hech kimga biriktirilmaydi.</p>
+  </section>
+  <section class="step">
+    <h2><span class="num">5</span> Imtihonni o'qituvchiga bering</h2>
+    <p>Imtihonni admin yaratgan bo'lsa, o'qituvchi uni <b>avtomatik ko'rmaydi</b>. Imtihon → <b>Sozlamalar</b> tabi → «Kirish huquqi bor o'qituvchilar» → o'qituvchini belgilab <b>Saqlash</b>. O'qituvchi o'zi yaratgan imtihonni doim ko'radi.</p>
+    <img src="img/g05-oqituvchiga-berish.png" alt="Imtihonni o'qituvchiga berish">
+  </section>
+  <section class="step">
+    <h2><span class="num">6</span> Natijalar va hisobotlar</h2>
+    <p><b>Natijalar</b> sahifasida barcha imtihon natijalari. Daraja, o'qituvchi, sana va holat bo'yicha filtrlash, <b>Excel</b> va <b>PDF</b> ga yuklab olish mumkin. Natijani bossangiz, bo'limlar bo'yicha ball va har bir savol ko'rinadi.</p>
+    <img src="img/g06-natijalar.png" alt="Natijalar">
+  </section>
+
+  <h2 class="chapter" id="joylash">Savollarni imtihonga joylash</h2>
+  <p class="lead">Testni PDF yoki Word'dan nusxalab tashlaysiz, javoblarni alohida yozasiz. Tizim o'zi savollarga ajratadi.</p>
+
+
+  <section class="step">
+    <h2><span class="num">1</span> Imtihonni oching</h2>
+    <p><b>Imtihonlar</b> bo'limiga kiring va kerakli imtihon nomini bosing. Saralash testi ro'yxatning eng tepasida turadi.</p>
+    <img src="1-imtihon.png" alt="Imtihonlar ro'yxati">
+    <div class="tip">Saralash testini <b>Darajalar</b> sahifasidan ham ochish mumkin: daraja qatoridagi <b>«Sozlash»</b> havolasi.</div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">2</span> «📋 Matn tashlash» tugmasini bosing</h2>
+    <p>Imtihon sahifasida <b>Variantlar</b> tabini oching. Variant kartasining (masalan «Variant A») o'ng tepasida shu tugma turadi.</p>
+    <img src="2-tugma.png" alt="Matn tashlash tugmasi">
+    <div class="tip">Tugma ko'rinmasa: imtihonni allaqachon kimdir topshirgan (u qulflangan) yoki variant hali yaratilmagan («+ Variant qo'shish»).</div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">3</span> Chapga test, o'ngga javoblar</h2>
+    <p>Ochilgan oynada ikkita katak bor. <b>Chapga</b> testni xuddi PDF'dagidek nusxalab tashlang. <b>O'ngga</b> javoblarni yozing.</p>
+    <img src="3-matn-va-javob.png" alt="Ikkita katak">
+  </section>
+
+  <section class="step">
+    <h2><span class="num">★</span> Javoblar testga qanday mos tushadi?</h2>
+    <p>Testdagi har bir <b>mashq</b> (1., 2., 3. sarlavhali bo'lim) uchun javoblarda bitta <b>blok</b> yoziladi. Bloklar <b>bo'sh qator</b> bilan ajratiladi va <b>shu tartibda</b> bo'ladi. Rang bir xil bo'lsa, ular bir-biriga mos:</p>
+    <div class="cols">
+      <div>
+        <p class="label">Chap katak (test)</p>
+        <pre class="c1"><b>1. Complete the sentences.</b>
+1 I have two sisters.
+2 My sisters ______ both pretty.
+3 Our house ______ a big garden.</pre>
+        <pre class="c2" style="margin-top:10px"><b>2. Tick the correct sentence.</b>
+1 ☐ I like leave early today.
+  ☐ I'd like to leave early today.
+2 ☐ Do you like your job?
+  ☐ Would you like your job?</pre>
+        <pre class="c3" style="margin-top:10px"><b>3. Read the text. True or false?</b>
+Tom gets up at seven.
+1 ☐ Tom gets up at six.
+2 ☐ Tom walks to school.</pre>
+      </div>
+      <div>
+        <p class="label">O'ng katak (javoblar)</p>
+        <pre class="c1">are, has</pre>
+        <pre class="c2" style="margin-top:10px">B, A</pre>
+        <pre class="c3" style="margin-top:10px">False, True</pre>
+        <p style="margin-top:14px"><b>Nimaga e'tibor bering:</b></p>
+        <ul>
+          <li>1-mashq javobi <code>are, has</code>, chunki bo'sh joyli <b>2 va 3</b>-gaplar bor.</li>
+          <li>«1 I have two sisters.» bo'sh joyi yo'q, bu <b>namuna</b>. U o'tkazib yuboriladi va javob yozmaysiz.</li>
+          <li>Tick mashqida <code>B</code> = ikkinchi gap to'g'ri, <code>A</code> = birinchi.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">5</span> «Tekshirish» ni bosing</h2>
+    <p>Tizim hech narsani saqlamasdan, nimani qanday tanigani ko'rsatadi: mashq turi, har bir savol va uning javobi.</p>
+    <img src="4-tekshirish.png" alt="Tekshirish natijasi">
+    <div class="ok"><b>Yashil javob</b> = hammasi joyida. <b>Qizil «javob yo'q»</b> = shu savolning javobini yozmagansiz. Javobni o'ng katakka qo'shib, yana «Tekshirish» ni bosing.</div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">7</span> Saqlash</h2>
+    <p>Hammasi to'g'ri bo'lsa, shu tugmani bosing. Savollar imtihonning shu variantiga qo'shiladi.</p>
+    <img src="5-saqlash.png" alt="Saqlash tugmasi">
+  </section>
+
+  <section class="step">
+    <h2>📖 Reading (o'qish matni) qanday joylanadi</h2>
+    <p>Matn <b>mashq sarlavhasidan keyin</b>, birinchi savoldan <b>oldin</b> turadi. Tizim uni o'zi ajratib, shu mashqning hamma savoliga <b>bitta umumiy matn</b> qilib biriktiradi. Imtihonda matn chapda, savollar o'ngda chiqadi.</p>
+
+    <h3>1) True / False / No information</h3>
+    <div class="cols">
+      <div><p class="label">Chap katak (test)</p>
+<pre class="c1"><b>9. Read the text. Are the sentences true, false or no information?</b>
+SLEEP AND MEMORY
+For a long time, scientists believed that the
+brain simply rested during sleep. ...
+1 ☐ Scientists have always known the brain is active.
+2 ☐ The students learned the words in the evening.
+3 ☐ The students who stayed awake were paid.</pre></div>
+      <div><p class="label">O'ng katak (javoblar)</p>
+<pre class="c1">False, True, NG</pre>
+<p><code>NG</code> = No information / Not given. Shunda 3 ta tugma chiqadi: TRUE · FALSE · NO INFORMATION. Faqat True/False bo'lsa, 2 ta tugma.</p></div>
+    </div>
+
+    <h3 style="margin-top:22px">2) Matn va A / B / C savollar</h3>
+    <div class="cols">
+      <div><p class="label">Chap katak (test)</p>
+<pre class="c2"><b>1. Read the text and choose the correct answer.</b>
+SLEEP AND MEMORY
+For a long time, scientists believed that the
+brain simply rested during sleep. ...
+1 What did scientists believe?
+A) The brain rests during sleep.
+B) The brain is very active.
+C) The brain stops working.
+2 What does the brain do at night?
+A) It forgets the day.
+B) It replays information.
+C) It makes new words.</pre></div>
+      <div><p class="label">O'ng katak (javoblar)</p>
+<pre class="c2">A, B</pre>
+<p>Sarlavhada <code>choose</code> so'zi bo'lsin. Matn kamida ~20 so'zdan iborat bo'lsa, tizim uni "o'qish matni" deb oladi.</p></div>
+    </div>
+
+    <h3 style="margin-top:22px">3) Matn ichida bo'sh joylar</h3>
+    <div class="cols">
+      <div><p class="label">Chap katak (test)</p>
+<pre class="c3"><b>1.</b> live come speak have eat swim
+THE BEST SWIMMER IN THE WORLD
+'I (1) come from Baltimore, USA. I (2) ______
+two sisters. I still (3) ______ in Baltimore.</pre></div>
+      <div><p class="label">O'ng katak (javoblar)</p>
+<pre class="c3">have, live</pre>
+<p><code>(1) come</code> kabi allaqachon to'ldirilgan joy <b>namuna</b>, u savol bo'lmaydi. Javoblarni faqat bo'sh joylar uchun yozing (yoki namunani ham birinchi qilib yozsangiz bo'ladi).</p></div>
+    </div>
+
+    <div class="tip"><b>Eslatma:</b> matn ichidagi sarlavhalar (<code>THE BEST SWIMMER…</code>, <code>HOME</code>, <code>TRAINING</code>) bosh harflar bilan yozilsa, imtihonda alohida sarlavha bo'lib chiqadi. Matn PDF'da qatorlarga bo'lingan bo'lsa ham, tizim ularni bitta paragrafga birlashtiradi.</div>
+    <h3 style="margin-top:22px">4) Matn va savollarga yozma javob (Answer the questions)</h3>
+    <div class="cols">
+      <div><p class="label">Chap katak (test)</p>
+<pre class="c4"><b>1. Read the text and answer the questions.</b>
+Isambard Brunel
+Isambard Brunel was a great engineer. ...
+Example: What was his job? He was an engineer.
+1 Where was Brunel from? ________
+2 What was his father's job? ________
+<b>Read the text again and tick True or False.</b>
+Brunel's mother was French.
+Brunel spoke two languages.</pre></div>
+      <div><p class="label">O'ng katak (javoblar)</p>
+<pre class="c4">England
+An engineer
+
+False, True</pre>
+<p>Birinchi mashq: <b>har bir javob alohida qatorda</b>. Ikkinchi mashq (True/False) raqamsiz yozilgan bo'lsa ham taniladi va u <b>oldingi mashqning matniga</b> ulanadi ("the text again").</p></div>
+    </div>
+    <div class="tip">Yozma javob <b>aniq mos kelishi</b> kerak (katta-kichik harf, nuqta, vergul farq qilmaydi, lekin so'zlar farq qiladi). Bir nechta to'g'ri javob bo'lsa, <code>|</code> bilan ajrating: <code>An engineer | He was an engineer</code>.</div>
+    <div class="tip">Hozircha <b>qo'llab-quvvatlanmaydi</b>: sarlavhalarni moslashtirish (Matching headings). Uni <b>Savollar bazasi → + Savol qo'shish</b> orqali qo'lda kiriting.</div>
+  </section>
+
+  <section class="step">
+    <h2>Mashq turini tizim qanday biladi?</h2>
+    <p>Mashq <b>sarlavhasidagi so'zdan</b>. Sarlavha <code>raqam. ko'rsatma</code> ko'rinishida bo'lishi kerak (masalan <code>4. Tick the correct sentence.</code>).</p>
+    <table>
+      <tr><th>Sarlavhada shu so'z bo'lsa</th><th>Mashq turi</th><th>Javob qanday yoziladi</th></tr>
+      <tr><td><code>tick</code></td><td>To'g'ri gapni belgilash</td><td><code>B, A, A</code></td></tr>
+      <tr><td><code>mistake</code></td><td>Xatoni topish</td><td>to'g'ri gapning o'zi</td></tr>
+      <tr><td><code>odd one</code></td><td>Ortiqcha so'z</td><td><code>bridge, waiter</code></td></tr>
+      <tr><td><code>past simple</code></td><td>So'z shakli</td><td><code>do - did</code> (har biri alohida qatorda)</td></tr>
+      <tr><td><code>conversation</code> / <code>question words</code></td><td>Dialogni to'ldirish</td><td><code>where, when, who</code></td></tr>
+      <tr><td><code>listen</code></td><td>Tinglash (audio bilan)</td><td>mashq shakliga qarab: <code>A, B</code> / <code>seven</code>; audio faylni oynada tanlang</td></tr>
+      <tr><td><code>Writing</code>, <code>Write an email/essay…</code></td><td>Yozma ish</td><td>javob kerak emas: o'qituvchi ball qo'yadi</td></tr>
+      <tr><td><code>true</code> va <code>false</code></td><td>O'qish: True/False</td><td><code>False, True, NG</code> (NG = No information)</td></tr>
+      <tr><td><code>gaps</code></td><td>Matn ichidagi bo'sh joylar</td><td><code>harvesting, area</code></td></tr>
+      <tr><td><code>choose the correct</code></td><td>Variantlardan tanlash</td><td><code>A, C, B</code></td></tr>
+      <tr><td>boshqa (bo'sh joyli gaplar)</td><td>Bo'sh joyni to'ldirish</td><td><code>are, is, has</code></td></tr>
+    </table>
+    <div class="tip">Bir savolga bir nechta to'g'ri javob bo'lsa: <code>is | 's</code>.  Savolning o'ziga raqam bilan javob ham yozish mumkin: <code>2 are</code>.</div>
+  </section>
+
+
+  <h2 class="chapter" id="listen-write">Listening (tinglash) va Writing (yozma ish)</h2>
+  <section class="step">
+    <h2>🎧 Listening qanday joylanadi</h2>
+    <p>Tinglash mashqi uchun <b>audio fayl</b> kerak. Matn tashlash oynasida pastdagi <b>«🎧 Audio fayl»</b> maydoniga yozuvni tanlang. Sarlavhasida <code>Listen</code> so'zi bo'lgan <b>har bir mashqqa shu bitta yozuv</b> biriktiriladi. Savollar odatdagidek (A/B/C, bo'sh joy, True/False) yoziladi.</p>
+    <div class="cols">
+      <div><p class="label">Chap katak (test)</p>
+<pre class="c1"><b>1. Listen and choose the correct answer.</b>
+1 Where does Tom live?
+A) In London
+B) In Leeds
+2 What time does he get up?
+A) At six
+B) At seven
+<b>2. Listen and complete the sentences.</b>
+1 Tom gets up at ________ o'clock.</pre></div>
+      <div><p class="label">O'ng katak (javoblar)</p>
+<pre class="c1">A, B
+
+seven</pre>
+<p><b>Audio fayl</b> maydoniga <code>.mp3</code> tanlang. "Tekshirish" da audio tanlanmagan bo'lsa, savollar yonida <b>«audio kerak»</b> deb chiqadi.</p></div>
+    </div>
+    <p style="margin-top:16px">O'quvchi imtihonda mashq tepasida <b>bitta pleyer</b> ko'radi, yozuvni xohlagancha tinglay oladi:</p>
+    <img src="img/g16-tinglash.png" alt="Tinglash mashqi">
+    <div class="tip">Audio fayl serverda saqlanadi, shuning uchun hajmi juda katta bo'lmasin (bir necha MB yetarli). Tayyor audioni savollar bazasidan ham biriktirish mumkin: <b>Savollar bazasi → Matnlar</b> bo'limida audioli matn yarating va tinglash savoliga ulang.</div>
+  </section>
+  <section class="step">
+    <h2>✍️ Writing qanday joylanadi</h2>
+    <p>Yozma ish avtomatik baholanmaydi: o'quvchi yozadi, <b>o'qituvchi ball qo'yadi</b>. Matn tashlashda sarlavhada <code>Writing</code> yoki <code>Write an email / letter / essay / paragraph…</code> bo'lsa, tizim uni yozma topshiriq deb taniydi. <b>Javob kaliti kerak emas.</b></p>
+    <div class="cols">
+      <div><p class="label">Chap katak (test)</p>
+<pre class="c3"><b>3. Writing. Write an email to a friend about your weekend. (10 points)</b>
+Write 50-80 words.</pre></div>
+      <div><p class="label">O'ng katak (javoblar)</p>
+<pre class="c3">(bo'sh qoldiring)</pre>
+<p><code>(10 points)</code> eng yuqori ball. Yozilmasa, <b>10</b> deb olinadi. Bir nechta topshiriq bo'lsa, ularni raqamlab yozing: <code>1 Write about your family.</code>, <code>2 Write about your hobby.</code></p></div>
+    </div>
+    <p style="margin-top:16px">O'quvchi katta yozish maydonini va <b>so'zlar sonini</b> ko'radi, javobi o'zi saqlanadi:</p>
+    <img src="img/g17-yozish.png" alt="Yozma ish">
+    <h3 style="margin-top:22px">Topshirgandan keyin</h3>
+    <p>O'quvchi imtihonni topshirgach, test qismi darhol baholanadi, <b>yozma qism «tekshirilmoqda»</b> bo'ladi. Yakuniy natija, o'tdi/o'tmadi qarori, daraja tasdig'i yoki saralash taklifi <b>faqat o'qituvchi ball qo'ygandan keyin</b> chiqadi.</p>
+    <img src="img/g18-yozma-kutilmoqda.png" alt="Yozma ish tekshirilmoqda">
+    <h3 style="margin-top:22px">O'qituvchi ball qo'yadi</h3>
+    <ol>
+      <li>Bosh sahifada <b>«✍️ … ta yozma ish ballingizni kutmoqda»</b> xabari chiqadi. Uni bosing, yoki <b>Natijalar</b> sahifasida <b>«Yozma ish holati → Yozma ish ball kutmoqda»</b> filtrini tanlang.</li>
+    </ol>
+    <img src="img/g19-yozma-royxat.png" alt="Yozma ishi kutayotgan natijalar">
+    <ol start="2">
+      <li>Natijani oching. <b>«Yozma ish»</b> bo'limida topshiriq va o'quvchi yozgan matn turadi.</li>
+      <li><b>Ball</b> (0 dan eng yuqori ballgacha) va <b>izoh</b> yozing, <b>«Ballarni saqlash»</b> ni bosing.</li>
+    </ol>
+    <img src="img/g20-ball-qoyish.png" alt="Ball qo'yish">
+    <div class="ok">Ball saqlangach natija yakunlanadi: foiz qayta hisoblanadi, o'tgan o'quvchi uchun <b>«Tasdiqlash / Rad etish»</b> paydo bo'ladi (saralash testida esa daraja belgilanadi). O'quvchi o'z natijasida ballni va izohingizni ko'radi.</div>
+    <div class="tip">Ballni faqat <b>imtihon o'qituvchisi</b> (yoki admin) qo'ya oladi, resepshn va o'quvchi qo'ya olmaydi. Ball qo'yilgandan keyin uni o'zgartirib bo'lmaydi. O'quvchi hech narsa yozmagan bo'lsa, ball so'ralmaydi va javobsiz hisoblanadi.</div>
+  </section>
+
+  <h2 class="chapter" id="resepshn">Resepshn: yangi o'quvchi testi</h2>
+  <section class="step">
+    <p>O'quvchi keldi, lekin uni ro'yxatga olish shart emas. <b>Saralash testlari</b> sahifasida:</p>
+    <ol>
+      <li><b>Test darajasini</b> tanlang (ism va familiya ixtiyoriy).</li>
+      <li><b>«Testni hozir boshlash»</b> ni bosing. Test shu kompyuterda to'liq ekranda ochiladi, o'quvchi o'zi yechadi.</li>
+      <li>Natija chiqadi. Past yoki yuqori balda tizim boshqa daraja testini taklif qiladi: <b>«Ha, … ni topshiraman»</b> yoki <b>«Yo'q, yakunlash»</b>. Tugagach <b>«Yakunlash va resepshnga qaytish»</b> ni bosing.</li>
+    </ol>
+    <img src="img/g07-resepshn.png" alt="Resepshn: tezkor test">
+    <div class="tip">Ro'yxatsiz o'quvchi jadvalda <b>«Mehmon #…»</b> bo'lib turadi. U o'qishga qolsa, qatordagi <b>«O'quvchi qilib ro'yxatga olish»</b> ni bosing: ism, familiya, telefon kiritiladi va login/parol beriladi. Test natijasi saqlanadi. Keyin uni guruhga qo'shing.</div>
+    <div class="tip">Boshqa yo'l: <b>O'quvchilar</b> → <b>+ O'quvchini ro'yxatga olish</b> orqali oldindan ro'yxatga olib, keyin testni biriktirish ham mumkin. Daraja aniqlangan, lekin guruhi yo'q o'quvchilarni <b>«Daraja aniq, guruhi yo'q»</b> filtri bilan topasiz va <b>«Guruhga qo'shish»</b> bosasiz.</div>
+  </section>
+
+  <h2 class="chapter" id="oqituvchi">O'qituvchi</h2>
+  <section class="step">
+    <h2><span class="num">1</span> O'z o'quvchilarini qo'shish</h2>
+    <p><b>Mening o'quvchilarim</b> → <b>+ O'quvchini ro'yxatga olish</b>. Ism, familiya, telefon, boshlang'ich daraja va <b>o'z guruhingiz</b> tanlanadi. Saqlagach login va parol bir marta ko'rsatiladi.</p>
+    <img src="img/g08-oqituvchi-oquvchilar.png" alt="O'qituvchi: o'quvchilar">
+  </section>
+  <section class="step">
+    <h2><span class="num">2</span> Mavjud o'quvchini guruhga qo'shish</h2>
+    <p><b>Mening guruhlarim</b> → guruhdagi <b>A'zolar</b> → qidiring → <b>Qo'shish</b>. Qidiruvda faqat hali hech qaysi guruhda bo'lmagan o'quvchilar chiqadi.</p>
+    <img src="img/g09-oqituvchi-azolar.png" alt="Guruh a'zolari">
+  </section>
+  <section class="step">
+    <h2><span class="num">3</span> O'quvchining login va parolini berish</h2>
+    <p><b>Mening o'quvchilarim</b> jadvalida har bir o'quvchining <b>logini</b> ko'rinib turadi (odatda telefon raqami). Parolni ko'rsatish uchun o'quvchi qatoridagi <b>«Login va parol»</b> tugmasini bosing: tizim <b>yangi parol</b> yaratadi va uni login bilan birga ko'rsatadi. <b>Chop etish</b> tugmasi bilan qog'ozga chiqarib o'quvchiga berasiz.</p>
+    <img src="img/g21-login-va-parol.png" alt="O'quvchi logini va parol tugmasi">
+    <div class="tip">Parollar xavfsizlik uchun bazada <b>shifrlangan</b> saqlanadi, shuning uchun eski parolni ko'rsatib bo'lmaydi. «Login va parol» yangi parol yaratadi, <b>eskisi ishlamay qoladi</b> va yangisi <b>faqat bir marta</b> ko'rsatiladi. Shuning uchun bosishdan oldin tasdiq so'raydi. O'qituvchi faqat <b>o'z guruhlaridagi</b> o'quvchilar uchun parol yarata oladi.</div>
+  </section>
+  <section class="step">
+    <h2><span class="num">4</span> Imtihonni biriktirish</h2>
+    <p><b>Imtihonlar</b> → imtihonni oching (<b>e'lon qilingan</b> bo'lishi shart) → <b>Biriktirish</b> tabi:</p>
+    <ol>
+      <li>Guruhni yoki alohida o'quvchilarni belgilang.</li>
+      <li>Variantni tanlang (<b>Tasodifiy</b> yoki aniq variant) va kerak bo'lsa boshlanish/tugash vaqtini qo'ying.</li>
+      <li><b>Biriktirish</b> ni bosing. Pastda hisobot chiqadi: nechtasiga biriktirildi va kim nega biriktirilmadi.</li>
+    </ol>
+    <div class="tip">Imtihon faqat <b>darajasi mos</b> o'quvchilarga biriktiriladi. Masalan «Elementary → Pre-Intermediate» imtihoni faqat Elementary o'quvchilariga beriladi. Daraja hali aniqlanmagan o'quvchi uchun resepshn taxmin qilgan boshlang'ich daraja olinadi. Bo'sh guruhga biriktirib bo'lmaydi.</div>
+  </section>
+  <section class="step">
+    <h2><span class="num">5</span> Darajani tasdiqlash</h2>
+    <p>O'quvchi imtihondan o'tsa, natija <b>Daraja tasdiqlari</b> bo'limiga tushadi. Natijani oching, ko'rib chiqing va <b>Tasdiqlash</b> (daraja oshadi, tarixga yoziladi) yoki <b>Rad etish</b> (daraja o'zgarmaydi) ni bosing.</p>
+    <img src="img/g15-tasdiqlash.png" alt="Darajani tasdiqlash">
+    <div class="tip">Qaror qabul qilingach o'qituvchi uni o'zgartira olmaydi. Faqat admin natija sahifasida «Administrator qarorini o'zgartirish» orqali, izoh yozib o'zgartiradi. O'tmagan o'quvchining darajasi o'zgarmaydi va qayta topshira olmaydi.</div>
+  </section>
+
+  <h2 class="chapter" id="oquvchi">O'quvchi: imtihon topshirish</h2>
+  <section class="step">
+    <h2><span class="num">1</span> Imtihonni toping</h2>
+    <p><b>Mening imtihonlarim</b> sahifasida sizga biriktirilgan imtihonlar turadi. <b>«Ko'rsatma va boshlash»</b> ni bosing.</p>
+    <img src="img/g10-oquvchi-imtihonlar.png" alt="Mening imtihonlarim">
+  </section>
+  <section class="step">
+    <h2><span class="num">2</span> Ko'rsatmani o'qing va boshlang</h2>
+    <p>Davomiylik, savollar soni va o'tish bali ko'rsatiladi. <b>Imtihon faqat bir marta topshiriladi</b>, qayta topshirish yo'q.</p>
+    <img src="img/g11-ko-rsatma.png" alt="Ko'rsatma">
+  </section>
+  <section class="step">
+    <h2><span class="num">3</span> Savollarga javob bering</h2>
+    <p>Tepada qolgan vaqt. Bo'sh joyli gaplarda javobni gap ichiga yozasiz, tanlov savollarida tugmani bosasiz. Javoblar <b>o'zi saqlanadi</b>. Savollar orasida <b>Oldingi / Keyingi</b> yoki pastdagi raqamlar bilan yurasiz. <b>A+</b> harf o'lchamini kattalashtiradi.</p>
+    <img src="img/g12-imtihon-ekrani.png" alt="Imtihon ekrani">
+    <div class="ok">Sahifa yangilansa yoki internet uzilsa, tashvishlanmang: o'sha imtihonga qaytib kirsangiz, javoblaringiz va qolgan vaqt saqlanadi.</div>
+  </section>
+  <section class="step">
+    <h2><span class="num">4</span> O'qish matni</h2>
+    <p>O'qish savollarida matn chapda, savollar o'ngda turadi. Matnni o'qib, TRUE / FALSE (yoki NO INFORMATION) ni tanlaysiz yoki javob yozasiz.</p>
+    <img src="img/g13-oqish.png" alt="O'qish matni">
+  </section>
+  <section class="step">
+    <h2><span class="num">5</span> Topshirish va natija</h2>
+    <p>Tugagach pastdagi qizil <b>«Testni topshirish»</b> ni bosing va tasdiqlang. Vaqt tugasa, imtihon o'zi topshiriladi. Natijada foiz, to'g'ri/xato soni va bo'limlar bo'yicha ball ko'rinadi. Darajani oshirish imtihonida natija o'qituvchi tasdig'ini kutadi.</p>
+    <img src="img/g14-natija.png" alt="Natija">
+  </section>
+  <section class="step">
+    <h2><span class="num">6</span> To'liq ekran rejimi</h2>
+    <p>Imtihon <b>butun ekranni</b> egallaydi: faqat savollar, vaqt, savol raqamlari va topshirish tugmasi ko'rinadi. «Imtihonni boshlash» bosilganda brauzer to'liq ekranga o'tadi.</p>
+    <p><b>To'liq ekrandan chiqsangiz</b> yoki boshqa oynaga o'tsangiz, ekranda <b>10 soniyalik hisoblagich</b> chiqadi. 10 soniya ichida <b>«To'liq ekranga qaytish»</b> ni bosing, imtihon davom etadi. Qaytmasangiz imtihon <b>to'xtatiladi</b>, javoblaringiz saqlanadi va siz «Mening imtihonlarim» sahifasiga qaytasiz. U yerda holat «O'qituvchi tasdig'ini kutmoqda» bo'ladi.</p>
+    <img src="img/g23-tolaekran-ogohlantirish.png" alt="To'liq ekran ogohlantirishi">
+    <p><b>O'qituvchi</b> «Daraja tasdiqlari» sahifasining tepasida to'xtatilgan imtihonlarni ko'radi va tanlaydi: <b>«Davom etishga ruxsat»</b> (o'quvchi qolgan vaqt bilan davom etadi) yoki <b>«Saqlangan javoblar bilan yakunlash»</b>. Hisoblash serverda bajariladi, brauzerni almashtirib aldab bo'lmaydi.</p>
+    <img src="img/g24-toxtatilgan.png" alt="To'xtatilgan imtihonlar">
+    <p>Brauzer to'liq ekranni qo'llamasa (masalan, ba'zi telefonlar), imtihon boshida va davomida ogohlantirish chiqadi, imtihon esa to'xtatilmaydi.</p>
+  </section>
+
+  <h2 class="chapter" id="savol-javob">Tez-tez uchraydigan savollar</h2>
+  <section class="step">
+    <details><summary>Yozma ishning natijasi chiqmayapti</summary><p>Yozma qismni o'qituvchi tekshirmaguncha yakuniy natija chiqmaydi. Bosh sahifadagi «yozma ish ballingizni kutmoqda» xabari yoki Natijalar → «Yozma ish ball kutmoqda» filtri orqali toping va ball qo'ying.</p></details>
+    <details open><summary>«Matn tashlash» tugmasi ko'rinmayapti</summary><p>Imtihonni allaqachon kimdir topshirgan bo'lsa, u <b>qulflanadi</b> va savol qo'shib bo'lmaydi. Variant yaratilmagan bo'lsa, avval «+ Variant qo'shish» ni bosing.</p></details>
+    <details><summary>Imtihon o'qituvchi sahifasida yo'q</summary><p>Admin yaratgan imtihon o'qituvchiga avtomatik ko'rinmaydi. Imtihon → Sozlamalar → «Kirish huquqi bor o'qituvchilar» orqali bering.</p></details>
+    <details><summary>«Biriktirish» hech kimga biriktirmadi</summary><p>Sabablari: imtihon e'lon qilinmagan; o'quvchilarning darajasi imtihon darajasiga mos emas; guruh bo'sh. Hisobotda har bir o'tkazib yuborilgan o'quvchi va uning darajasi ko'rsatiladi.</p></details>
+    <details><summary>O'quvchi parolini unutdi</summary><p>Admin yoki resepshn: O'quvchilar → «Parolni tiklash». Yangi parol bir marta ko'rsatiladi.</p></details>
+    <details><summary>Imtihon noto'g'ri tuzilib qolsa</summary><p>Savollarni topshirishlar boshlanishidan oldin tuzating. Topshirilgandan keyin savollar qulflanadi, shuning uchun yangi imtihon yarating.</p></details>
+    <details><summary>O'quvchining darajasi noto'g'ri belgilandi</summary><p>Admin: O'quvchilar → o'quvchini oching → «Darajani o'zgartirish». Hamma o'zgarishlar daraja tarixida saqlanadi.</p></details>
+    <details><summary>Serverni qanday ishga tushiraman?</summary><p>Terminalda <code>./run.sh</code>, so'ng brauzerda <code>http://localhost:5173</code> ni oching. To'xtatish: Ctrl+C.</p></details>
+  </section>
+</main>
+</body>
+</html>
