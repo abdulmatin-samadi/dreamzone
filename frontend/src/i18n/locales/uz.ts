@@ -256,7 +256,7 @@ const uz: Dict<typeof en> = {
   },
   history: {
     empty: "Hali imtihon topshirmagansiz.", answers: "To'g'ri · Xato · Javobsiz", when: "Topshirgan vaqti", spent: "Sarflangan vaqt",
-    hm: "{{h}} soat {{m}} daqiqa", m: "{{m}} daqiqa", awaited: "Natija kutilmoqda: o'qituvchi yoki admin ko'rib chiqib, o'tdingizmi yoki yo'qmi hal qiladi.",
+    hm: "{{h}} soat {{m}} daqiqa", m: "{{m}} daqiqa", awaited: "Natija kutilmoqda",
     writingCheck: "Yozma ishingiz tekshirilmoqda. Shundan keyin natija chiqadi.", movedUp: "O'tdingiz! Darajangiz {{level}} bo'ldi.",
     stays: "Bu safar o'ta olmadingiz. Darajangiz {{level}} bo'lib qoladi.", placed: "Sizning darajangiz: {{level}}",
   },

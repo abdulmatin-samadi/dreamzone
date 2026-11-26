@@ -251,7 +251,7 @@ const en = {
   },
   history: {
     empty: "You have not taken an exam yet.", answers: "Right · Wrong · Skipped", when: "Taken on", spent: "Time spent",
-    hm: "{{h}} h {{m}} min", m: "{{m}} min", awaited: "Result awaited: your teacher or the admin decides whether you passed.",
+    hm: "{{h}} h {{m}} min", m: "{{m}} min", awaited: "Result awaited",
     writingCheck: "Your writing is being checked. The result comes after that.", movedUp: "You passed! Your level is now {{level}}.",
     stays: "You did not pass this time. Your level stays {{level}}.", placed: "Your level: {{level}}",
   },
