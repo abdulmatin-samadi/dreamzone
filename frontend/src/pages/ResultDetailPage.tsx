@@ -50,7 +50,7 @@ export default function ResultDetailPage() {
   };
 
   // guests' (placement) writing is scored at reception, level-upgrade writing by the teacher
-  const canGrade = r.writing_pending && (r.kind === "UPGRADE" ? role === "TEACHER" : role === "RECEPTIONIST");
+  const canGrade = r.writing_pending && (role === "ADMIN" || (r.kind === "UPGRADE" ? role === "TEACHER" : role === "RECEPTIONIST"));
   const grade = async (grades: { question_id: number; points: number; feedback: string }[]) => {
     setBusy(true);
     try { await api.post(`/results/${r.id}/grade-writing/`, { grades }); notify.ok("result.scoresSaved"); refresh(); } catch (e) { notify.fail(e); } finally { setBusy(false); }

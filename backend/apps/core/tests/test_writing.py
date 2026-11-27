@@ -84,8 +84,7 @@ class WritingFlowTests(TestCase):
         self.assertIsNone(StudentProfile.objects.get(pk=self.student.pk).current_level)       # level not decided yet
         url = f"{API}/results/{res.id}/grade-writing/"
         body = {"grades": [{"question_id": w.id, "points": 9}]}
-        # the guest's writing is reception's job: not the admin's, not the teacher's
-        self.assertEqual(client_for(self.admin).post(url, body, format="json").status_code, 403)
+        # the guest's writing is reception's job (the admin may score it too), not the teacher's
         self.assertEqual(client_for(self.teacher).post(url, body, format="json").json()["code"], "writing_not_yours")
         rc = client_for(make_user("rec", Role.RECEPTIONIST))
         self.assertEqual([x["id"] for x in rc.get(f"{API}/results/writing-queue/").json()], [res.id])
@@ -108,10 +107,10 @@ class WritingFlowTests(TestCase):
         self.assertEqual(tc.get(f"{API}/results/?writing_pending=true").json()["count"], 1)
         self.assertEqual(tc.get(f"{API}/analytics/dashboard/").json()["totals"]["writing_pending"], 1)
         self.assertEqual(client_for(self.admin).get(f"{API}/analytics/dashboard/").json()["totals"]["writing_pending"], 1)
-        # upgrade writing is the teacher's: reception and admin cannot score it
+        # upgrade writing is the teacher's (or the admin's): reception cannot score it
         res = ExamResult.objects.get()
         body = {"grades": [{"question_id": w.id, "points": 5}]}
-        self.assertEqual(client_for(self.admin).post(f"{API}/results/{res.id}/grade-writing/", body, format="json").status_code, 403)
+        self.assertEqual(client_for(make_user("rec2", Role.RECEPTIONIST)).post(f"{API}/results/{res.id}/grade-writing/", body, format="json").status_code in (403, 404), True)
         self.assertEqual(client_for(make_user("rec", Role.RECEPTIONIST)).get(f"{API}/results/writing-queue/").json(), [])
 
     def test_writing_answer_validation_and_question_creation(self):
@@ -119,3 +118,18 @@ class WritingFlowTests(TestCase):
         r = ac.post(f"{API}/questions/", {"text": "Write about your family.", "question_type": "WRITING", "section": "WRITING",
                                           "level": self.L["A1"].id, "points": 10, "options": []}, format="json")
         self.assertEqual(r.status_code, 201, r.content)
+
+
+class AdminScoresWritingTests(TestCase):
+    """The admin may score written answers too (not only the teacher / reception)."""
+
+    setUp = WritingFlowTests.setUp
+    make_writing_exam = WritingFlowTests.make_writing_exam
+    sit = WritingFlowTests.sit
+
+    def test_admin_scores_upgrade_writing(self):
+        exam, w = self.make_writing_exam()
+        _c, res = self.sit(exam)
+        r = client_for(self.admin).post(f"{API}/results/{res.id}/grade-writing/", {"grades": [{"question_id": w.id, "points": 6}]}, format="json")
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertFalse(r.json()["writing_pending"])

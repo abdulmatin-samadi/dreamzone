@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from apps.accounts.models import Role
 from apps.core.exceptions import DomainError
-from apps.core.permissions import IsAdmin, IsAdminOrTeacher, IsAuthenticated, IsTeacherOrReceptionist
+from apps.core.permissions import IsAdmin, IsAdminOrTeacher, IsAuthenticated, IsTeacherOrReceptionist, role_permission
 
 from . import exports, services
 from .filters import ResultFilter
@@ -30,8 +30,10 @@ class ResultViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.G
         return ResultDetailSerializer if self.action == "retrieve" else ResultListSerializer
 
     def get_permissions(self):
-        if self.action in ("grade_writing", "writing_queue"):
+        if self.action == "writing_queue":
             return [IsTeacherOrReceptionist()]  # guests' writing -> reception, upgrade writing -> teacher
+        if self.action == "grade_writing":
+            return [role_permission(Role.TEACHER, Role.RECEPTIONIST, Role.ADMIN)()]  # the admin may score any written answer
         if self.action in ("approve", "reject", "export", "grade_speaking", "grade_paper_writing"):
             return [IsAdminOrTeacher()]
         if self.action == "override":
@@ -78,7 +80,7 @@ class ResultViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.G
         if not isinstance(grades, list) or not grades:
             raise DomainError("grades_required", status_code=400)
         result = self.get_object()
-        if result.examination.kind != services.writing_kind_for(request.user):
+        if request.user.role != Role.ADMIN and result.examination.kind != services.writing_kind_for(request.user):
             raise DomainError("writing_not_yours", status_code=403)
         result = services.grade_writing(result.pk, user=request.user, grades=grades)
         return Response(ResultDetailSerializer(result, context={"request": request}).data)
