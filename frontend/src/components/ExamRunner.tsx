@@ -221,7 +221,6 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
   const submittingRef = useRef(false);
   answersRef.current = answers;
   const scrollRef = useRef<HTMLDivElement>(null);
-  const toTop = () => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
 
   // ---- fullscreen exam mode. The browser only reports; the server owns the 10 s deadline and the termination.
   const [refused, setRefused] = useState(false);   // this device refused fullscreen: fall back to the visibility/focus rule
@@ -395,7 +394,6 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
   );
   if (!data) return <PageLoader />;
   const pages = buildPages(data.questions);
-  const page = pages[Math.min(pageIdx, pages.length - 1)];
   const numberOf = (q: AttemptQuestion) => data.questions.findIndex((x) => x.id === q.id) + 1;
   const answeredCount = data.questions.filter((x) => isAnswered(x, answers[x.id])).length;
   const unanswered = data.questions.length - answeredCount;
@@ -407,38 +405,24 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
     setAnswers((s) => ({ ...s, [qid]: a }));
   };
 
-  // gaps written inside the passage vs. questions listed next to it
-  const passageAudio = page.passage?.audio ?? null;
-  const audioOnly = !!page.passage && !page.passage.text.trim();   // listening exercise: the passage is just the audio track
-  const gapQs = new Map<number, AttemptQuestion>();
-  if (page.passage) page.qs.forEach((q) => { if (q.gap_no && page.passage!.text.includes(`[[${q.gap_no}]]`)) gapQs.set(q.gap_no, q); });
-  const listed = page.qs.filter((q) => !(q.gap_no && gapQs.get(q.gap_no) === q));
-  const first = page.numbers[0], last = page.numbers[page.numbers.length - 1];
-  const cat = page.qs[0].category;
-  // "Complete ... — Example: I get up at 8:00.": the example is shown as a sample row among the questions, not in the heading
-  const [instruction, example] = splitExample(page.qs[0].instruction ?? "");
-  const heading = instruction ? instruction
-    : cat === "TFREAD" && page.qs[0].options.length
-    ? page.qs[0].options.map((o) => o.text[0] + o.text.slice(1).toLowerCase()).join(" / ")
-    : cat ? (t(`exGroups.${cat}`) as string) : (t(`sections.${page.qs[0].section}`) as string);
   const fontClass = FONT[font];
-
-  return (
-    <div ref={scrollRef} className="fixed inset-0 z-[60] overflow-y-auto overscroll-contain bg-slate-50">
-    <div className="mx-auto max-w-[96rem] p-4 pb-40 sm:p-6 sm:pb-32">
-      <header className="sticky top-0 z-20 -mx-4 mb-5 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-lg font-semibold">{data.examination}</h1>
-            <p className="text-xs text-slate-500">{t("exam.answered", { n: answeredCount, total: data.questions.length })} ·{" "}
-              <span className={saveState === "error" ? "text-red-600" : ""}>{t(`exam.save.${saveState}`)}</span></p>
-          </div>
-          <ThemeToggle className="border border-slate-200 text-slate-600 hover:bg-slate-100" />
-          <div className={cx("shrink-0 rounded-lg px-3 py-1.5 font-mono text-lg font-semibold tabular-nums sm:text-xl", remaining < 300 ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-800")} aria-label={t("exam.timeLeft")}>{mm}:{ss}</div>
-        </div>
-        <ProgressBar className="mt-3" value={(remaining / total) * 100} tone={remaining < 300 ? "red" : "indigo"} />
-      </header>
-
+  const renderPage = (page: Page, pi: number) => {
+    // gaps written inside the passage vs. questions listed next to it
+    const passageAudio = page.passage?.audio ?? null;
+    const audioOnly = !!page.passage && !page.passage.text.trim();   // listening exercise: the passage is just the audio track
+    const gapQs = new Map<number, AttemptQuestion>();
+    if (page.passage) page.qs.forEach((q) => { if (q.gap_no && page.passage!.text.includes(`[[${q.gap_no}]]`)) gapQs.set(q.gap_no, q); });
+    const listed = page.qs.filter((q) => !(q.gap_no && gapQs.get(q.gap_no) === q));
+    const first = page.numbers[0], last = page.numbers[page.numbers.length - 1];
+    const cat = page.qs[0].category;
+    // "Complete ... — Example: I get up at 8:00.": the example is shown as a sample row among the questions, not in the heading
+    const [instruction, example] = splitExample(page.qs[0].instruction ?? "");
+    const heading = instruction ? instruction
+      : cat === "TFREAD" && page.qs[0].options.length
+      ? page.qs[0].options.map((o) => o.text[0] + o.text.slice(1).toLowerCase()).join(" / ")
+      : cat ? (t(`exGroups.${cat}`) as string) : (t(`sections.${page.qs[0].section}`) as string);
+    return (
+      <div key={page.key} id={`pg-${pi}`} className="mb-10 scroll-mt-32">
       {listed.length === 0 && (
         <h2 className="mb-4 border-b-2 border-sky-200 pb-2 text-xl font-bold text-slate-900">
           {(first === last ? t("exam.questionHeading", { n: first, title: "\u0000" }) : t("exam.questionsHeading", { a: first, b: last, title: "\u0000" })).split("\u0000").map((part, i) => i ? <Marked key={i} text={autoMark(heading) + part} /> : part)}
@@ -471,7 +455,7 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
                 </div>
               )}
               {listed.map((q) => (
-                <div key={q.id} className={cx("rounded-xl bg-sky-50 px-4 py-2.5 shadow-sm ring-1 ring-sky-100 sm:px-6", listed.length === 1 && "flex min-h-[30vh] flex-col justify-center")}>
+                <div key={q.id} id={`q-${q.id}`} className={cx("scroll-mt-32 rounded-xl bg-sky-50 px-4 py-2.5 shadow-sm ring-1 ring-sky-100 sm:px-6", false)}>
                   {q.type === "FILL" && BLANK.test(q.text) ? (
                     <div className="flex items-baseline gap-3">
                       <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md bg-blue-100 px-1 text-xs font-bold text-blue-700">{numberOf(q)}</span>
@@ -502,11 +486,34 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
         )}
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-3">
-        <Button variant="secondary" disabled={pageIdx === 0} onClick={() => { setPageIdx(pageIdx - 1); toTop(); }}>{t("common.previous")}</Button>
-        <span className="text-sm text-slate-500">{pageIdx + 1} / {pages.length}</span>
-        <Button disabled={pageIdx >= pages.length - 1} onClick={() => { setPageIdx(pageIdx + 1); toTop(); }}>{t("common.next")}</Button>
       </div>
+    );
+  };
+
+  return (
+    <div ref={scrollRef} onScroll={(e) => {
+      // which exercise is at the top of the screen: its numbers are ringed in the bottom bar
+      const y = e.currentTarget.getBoundingClientRect().top + 220;
+      let cur = 0;
+      pages.forEach((_, i) => { const el = document.getElementById(`pg-${i}`); if (el && el.getBoundingClientRect().top <= y) cur = i; });
+      if (cur !== pageIdx) setPageIdx(cur);
+    }} className="fixed inset-0 z-[60] overflow-y-auto overscroll-contain bg-slate-50">
+    <div className="mx-auto max-w-[96rem] p-4 pb-40 sm:p-6 sm:pb-32">
+      <header className="sticky top-0 z-20 -mx-4 mb-5 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-lg font-semibold">{data.examination}</h1>
+            <p className="text-xs text-slate-500">{t("exam.answered", { n: answeredCount, total: data.questions.length })} ·{" "}
+              <span className={saveState === "error" ? "text-red-600" : ""}>{t(`exam.save.${saveState}`)}</span></p>
+          </div>
+          <ThemeToggle className="border border-slate-200 text-slate-600 hover:bg-slate-100" />
+          <div className={cx("shrink-0 rounded-lg px-3 py-1.5 font-mono text-lg font-semibold tabular-nums sm:text-xl", remaining < 300 ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-800")} aria-label={t("exam.timeLeft")}>{mm}:{ss}</div>
+        </div>
+        <ProgressBar className="mt-3" value={(remaining / total) * 100} tone={remaining < 300 ? "red" : "indigo"} />
+      </header>
+
+      {/* every exercise one after another: the numbers keep going 1, 2, 3 ... down the page */}
+      {pages.map(renderPage)}
 
       {/* bottom bar: question numbers, font size and submit — always in reach, out of the questions' way */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 shadow-[0_-4px_16px_rgba(15,23,42,0.08)] backdrop-blur">
@@ -516,7 +523,11 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
               {data.questions.map((x, i) => {
                 const pi = pages.findIndex((p) => p.qs.some((y) => y.id === x.id));
                 return (
-                  <button key={x.id} onClick={() => { setPageIdx(pi); toTop(); }} aria-label={`${i + 1}`}
+                  <button key={x.id} onClick={() => {
+                    // the first question of an exercise: show its heading too; otherwise the question itself near the top
+                    const target = pages[pi]?.qs[0]?.id === x.id ? null : document.getElementById(`q-${x.id}`);
+                    (target ?? document.getElementById(`pg-${pi}`))?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }} aria-label={`${i + 1}`}
                     className={cx("h-6 min-w-6 rounded px-1 text-[11px] font-semibold tabular-nums", pi === pageIdx && "ring-2 ring-blue-500 ring-offset-1",
                       isAnswered(x, answers[x.id]) ? "bg-blue-600 text-on-accent" : "bg-slate-100 text-slate-600 hover:bg-slate-200")}>{i + 1}</button>
                 );
