@@ -29,7 +29,12 @@ export default function ResultDetailPage() {
   if (q.isLoading || !q.data) return <PageLoader />;
   const r = q.data;
   const role = user!.role;
-  const canReview = (role === "ADMIN" || role === "TEACHER") && r.approval_status === "PENDING";
+  // upgrade: the buttons are always there until the decision; they wait for the writing / speaking scores first
+  const undecided = r.kind === "UPGRADE" && !["APPROVED", "REJECTED"].includes(r.approval_status);
+  const canReview = (role === "ADMIN" || role === "TEACHER") && undecided;
+  const waitFor = r.writing_pending ? "writing_still_pending"
+    : Number(r.writing_points) > 0 && r.writing_score == null ? "writing_score_pending"
+    : Number(r.speaking_points) > 0 && r.speaking_score == null ? "speaking_still_pending" : "";
   const refresh = () => void qc.invalidateQueries({ queryKey: ["results"] });
 
   const answerOffer = async (accept: boolean) => {
@@ -73,7 +78,10 @@ export default function ResultDetailPage() {
       <PageHeader title={t("result.title")} actions={<>
         {role !== "ADMIN" && role !== "TEACHER" && <Button variant="secondary" onClick={() => nav(-1)}>{t("common.back")}</Button>}  {/* staff: the layout's back button */}
         {role !== "RECEPTIONIST" && role !== "STUDENT" && <Button variant="secondary" onClick={() => download(`/results/${r.id}/export/`, {}, `result-${r.id}.pdf`)}>PDF</Button>}
-        {canReview && <><Button variant="success" onClick={() => setReview("approve")}>{t("approvals.approve")}</Button><Button variant="danger" onClick={() => setReview("reject")}>{t("approvals.reject")}</Button></>}
+        {canReview && <>
+          {waitFor && <span className="max-w-xs text-right text-xs text-amber-600">{t(`errors.${waitFor}`)}</span>}
+          <Button variant="success" disabled={!!waitFor} onClick={() => setReview("approve")}>{t("approvals.approve")}</Button>
+          <Button variant="danger" disabled={!!waitFor} onClick={() => setReview("reject")}>{t("approvals.reject")}</Button></>}
         {role === "ADMIN" && r.kind === "UPGRADE" && r.is_locked && <Button variant="secondary" onClick={() => setOverride(true)}>{t("approvals.override")}</Button>}
       </>} />
       {role !== "STUDENT" && <p className="mb-4 text-sm"><Link className="text-indigo-700 hover:underline" to={`/students/${r.student}`}>{t("result.studentProfile")} →</Link></p>}
