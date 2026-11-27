@@ -567,3 +567,21 @@ class NumberedItemsStartingWithHeadingWords(TestCase):
         self.assertEqual(len(report["sections"]), 1)
         self.assertEqual(report["sections"][0]["title"], "Find the past simple of the VERBS")
         self.assertEqual([r["correct"] for r in rows], ["went", "came", "had", "made", "saw", "bought", "said", "found", "caught", "won"])
+
+
+class SentenceChoiceTests(TestCase):
+    """"1. A sentence / B sentence": pick one; the key may repeat the sentence a little shorter."""
+
+    def test_slash_sentences_become_choices_and_answers_match(self):
+        from apps.questions.text_import import build
+
+        text = ("Choose \u201clike\u201d or \u201cwould like\u201d\n1. I like leaving early today / I would like to leave\nearly today\n"
+                "2. Do you like your job / Would you like your job\n3. They like something to eat / They would like\nsomething to eat\n"
+                "4. I don\u2019t need any stamps/ I don\u2019t need some stamps")
+        report, rows = build(text, "I would like to leave early\nDo you like your job\nThey would like something\nI don\u2019t need any stamps")
+        self.assertEqual([q["status"] for q in report["sections"][0]["questions"]], ["ok"] * 4)
+        self.assertEqual([r["correct"] for r in rows], ["B", "A", "B", "A"])
+        self.assertEqual(rows[0]["options"][1], "I would like to leave early today")
+        report, rows = build(text, "Nothing like this\nDo you like your job\nThey would like something\nI don\u2019t need any stamps")
+        self.assertEqual(report["sections"][0]["questions"][0]["status"], "bad")
+        self.assertEqual(len(rows), 3)

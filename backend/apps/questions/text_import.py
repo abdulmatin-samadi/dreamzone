@@ -284,6 +284,27 @@ def _mcq_items(lines):
     return out, (text if len(text.split()) >= 20 else "")
 
 
+def _sentence_choice_items(lines):
+    """"1. I like leaving early today / I would like to leave early today": two (or more) whole sentences split by a
+    slash, the student picks the right one. Wrapped lines are joined to their item. -> items with options, or []."""
+    if any(BLANK.search(l) for l in lines):
+        return []
+    items, cur = [], None
+    for line in lines:
+        if m := ITEM.match(line):
+            cur = {"n": int(m.group(1)), "text": m.group(2)}
+            items.append(cur)
+        elif cur is not None:
+            cur["text"] += " " + line
+    out = []
+    for it in items:
+        parts = [x.strip() for x in re.split(r"\s*/\s*", it["text"]) if x.strip()]
+        if not (2 <= len(parts) <= 4 and all(len(x.split()) >= 2 for x in parts)):
+            return []  # not this shape: leave the section to the usual reader
+        out.append({"n": it["n"], "text": "Which sentence is correct?", "options": parts})
+    return out if len(out) >= 2 else []
+
+
 def _tick_items(lines):
     items, cur = [], None
     for line in lines:
@@ -539,7 +560,10 @@ def build(text, answers, section_title_limit=220, has_audio=False):
         passage, box = "", ""
         title = sec["title"][:section_title_limit]
 
-        if kind == Category.WORDFORM:
+        choice = _sentence_choice_items(sec["lines"]) if kind in (Category.GAP, Category.MCQ) else []
+        if choice:
+            kind, items = Category.MCQ, choice  # "A sentence / B sentence": pick the correct one
+        elif kind == Category.WORDFORM:
             for left, right in pairs or []:
                 questions.append({"n": None, "text": left, "answer": right, "options": [], "type": "FILL", "instruction": title})
             items = []
@@ -652,6 +676,9 @@ def build(text, answers, section_title_limit=220, has_audio=False):
                 q["status"] = "no_audio"  # the audio track is uploaded together with the text
             if q["answer"] and q["type"] == "MCQ" and not q.get("options"):
                 q["status"] = "bad"
+            elif (q["answer"] and q["type"] == "MCQ" and not q.get("slash") and not re.fullmatch(r"\s*[A-Ha-h]\s*", q["answer"])
+                  and _match_option(q["options"], q["answer"]) is None):
+                q["status"] = "bad"  # the answer names none of the options: nothing is guessed
             rows.append(_row(q, kind, passage, sec["title"])) if q["status"] == "ok" else None
         preview.append({
             "index": idx + 1, "printed": sec["printed"], "title": title, "category": kind, "category_label": kind.label,
@@ -660,6 +687,34 @@ def build(text, answers, section_title_limit=220, has_audio=False):
             "answers_given": bool(block),
         })
     return {"sections": preview, "notes": notes}, rows
+
+
+def _words(s):
+    return re.sub(r"[\u2018\u2019\u02bc`]", "'", s.lower()).replace("'", "").split()
+
+
+def _match_option(options, answer):
+    """Index of the option the answer names: the same text, or a shortened copy of exactly one option
+    ("I would like to leave early" for "I would like to leave early today"), else the clearly closest one."""
+    norm = lambda s: re.sub(r"\W", "", " ".join(_words(s)))  # noqa: E731
+    a = norm(answer)
+    if not a:
+        return None
+    same = [i for i, o in enumerate(options) if norm(o) == a]
+    if same:
+        return same[0]
+    inside = [i for i, o in enumerate(options) if norm(o).startswith(a) or a.startswith(norm(o))]
+    if len(inside) == 1:
+        return inside[0]
+    aw = set(_words(re.sub(r"[^\w\s'\u2019]", " ", answer)))
+    scores = []
+    for o in options:
+        ow = set(_words(re.sub(r"[^\w\s'\u2019]", " ", o)))
+        scores.append(len(aw & ow) / len(aw | ow) if aw | ow else 0)
+    best = max(scores, default=0)
+    if best >= 0.6 and scores.count(best) == 1:
+        return scores.index(best)
+    return None
 
 
 def _row(q, kind, passage, title):
@@ -677,8 +732,8 @@ def _row(q, kind, passage, title):
             hit = [i for i, c in enumerate(q["slash"]) if re.sub(r"\s+", " ", c.lower()) == norm]
             correct = "ABCDEFGH"[hit[0]] if hit else a
         elif not re.fullmatch(r"[A-Ha-h]", a):
-            hit = [i for i, o in enumerate(options) if re.sub(r"\W", "", o.lower()) == re.sub(r"\W", "", a.lower())]
-            correct = "ABCDEFGH"[hit[0]] if hit else a
+            hit = _match_option(options, a)
+            correct = "ABCDEFGH"[hit] if hit is not None else a
         else:
             correct = a.upper()
     return new_row(question=q["text"], type=q["type"], section="READING" if (kind == Category.MCQ and passage) else SECTION_OF[kind], options=options, correct=correct,
