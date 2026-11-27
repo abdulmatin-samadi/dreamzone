@@ -1,0 +1,53 @@
+# Render Blueprint: Dashboard → New → Blueprint → pick this repository.
+# Creates the database, the API (Django) and the website (React) and links them together.
+databases:
+  - name: dreamzone-db
+    databaseName: dreamzone
+    plan: free
+
+services:
+  - type: web
+    name: dreamzone-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: python manage.py migrate --noinput && gunicorn config.wsgi:application -b 0.0.0.0:$PORT --workers 2 --timeout 120
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.1
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: SERVE_MEDIA
+        value: "True"
+      - key: DB_ENGINE
+        value: postgres
+      - key: DB_HOST
+        fromDatabase: { name: dreamzone-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: dreamzone-db, property: port }
+      - key: DB_NAME
+        fromDatabase: { name: dreamzone-db, property: database }
+      - key: DB_USER
+        fromDatabase: { name: dreamzone-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: dreamzone-db, property: password }
+      - key: FRONTEND_HOST
+        fromService: { type: web, name: dreamzone-web, property: host }
+
+  - type: web
+    name: dreamzone-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService: { type: web, name: dreamzone-api, property: host }
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

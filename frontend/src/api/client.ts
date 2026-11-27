@@ -1,6 +1,8 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
-const BASE = `${import.meta.env.VITE_API_URL ?? ""}/api/v1`;
+// VITE_API_URL may be a full URL or a bare host name (Render hands over "dreamzone-api.onrender.com")
+const API_HOST = (import.meta.env.VITE_API_URL ?? "").trim().replace(/\/$/, "");
+const BASE = `${API_HOST && !/^https?:\/\//.test(API_HOST) ? `https://${API_HOST}` : API_HOST}/api/v1`;
 const KEY = "dz_tokens";
 
 export interface Tokens { access: string; refresh: string }
