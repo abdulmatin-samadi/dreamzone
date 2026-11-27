@@ -34,7 +34,7 @@ function buildPages(questions: AttemptQuestion[]): Page[] {
   return pages;
 }
 
-const FONT = ["text-xl", "text-2xl", "text-3xl"];  // questions are read on a big screen: start large, A+ goes larger
+const FONT = ["text-lg", "text-xl", "text-2xl"];  // compact enough for ~7 questions on a screen; A+ goes larger
 const BLANK = /_{2,}|\.{4,}/;  // a blank inside a sentence: the answer box goes right there
 
 /* ------------------------------------------------------------------ inputs */
@@ -51,6 +51,15 @@ function FillBox({ value, onChange, className, placeholder }: { value: string; o
   return (
     <input value={value} maxLength={500} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? (t("exam.typeAnswer") as string)} {...NO_ASSIST}
       className={cx("rounded-xl border-2 border-sky-300 bg-white px-3 py-2 text-[1em] text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200", className)} />
+  );
+}
+
+/** A gap inside the sentence: as tall as the text and as wide as what is typed (it grows letter by letter). */
+function InlineGap({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <input value={value} maxLength={200} onChange={(e) => onChange(e.target.value)} placeholder="…" {...NO_ASSIST}
+      style={{ width: `${Math.max(3, value.length + 1.5)}ch` }}
+      className="mx-1 inline-block max-w-full rounded-md border-2 border-sky-300 bg-white px-1.5 py-0 align-baseline text-[1em] font-normal leading-normal text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" />
   );
 }
 
@@ -445,26 +454,26 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
             <h2 className="mb-4 border-b-2 border-sky-200 pb-2 text-xl font-bold text-slate-900">
               {first === last ? t("exam.questionHeading", { n: first, title: heading }) : t("exam.questionsHeading", { a: first, b: last, title: heading })}
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-2">
               {listed.map((q) => (
-                <div key={q.id} className={cx("rounded-2xl bg-sky-50 p-5 shadow-sm ring-1 ring-sky-100 sm:p-10", listed.length === 1 && "flex min-h-[45vh] flex-col justify-center")}>
+                <div key={q.id} className={cx("rounded-xl bg-sky-50 px-4 py-2.5 shadow-sm ring-1 ring-sky-100 sm:px-6", listed.length === 1 && "flex min-h-[30vh] flex-col justify-center")}>
                   {q.type === "FILL" && BLANK.test(q.text) ? (
-                    <div className="flex gap-3">
-                      <span className="mt-2 flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md bg-blue-100 px-1 text-xs font-bold text-blue-700">{numberOf(q)}</span>
-                      <p className="font-semibold leading-[2.6] text-slate-900">
+                    <div className="flex items-baseline gap-3">
+                      <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md bg-blue-100 px-1 text-xs font-bold text-blue-700">{numberOf(q)}</span>
+                      <p className="font-semibold leading-relaxed text-slate-900">
                         {(() => {
                           const [before, ...after] = q.text.split(BLANK);
                           return (<>
                             {before}
-                            <FillBox value={answers[q.id]?.text ?? ""} onChange={(v) => setAnswerFor(q.id, { text: v })} className="mx-2 w-64 max-w-full py-1.5 align-middle font-normal" placeholder="…" />
+                            <InlineGap value={answers[q.id]?.text ?? ""} onChange={(v) => setAnswerFor(q.id, { text: v })} />
                             {after.join(" ")}
                           </>);
                         })()}
                       </p>
                     </div>
                   ) : (
-                  <div className="mb-3 flex gap-3">
-                    <span className="mt-1 flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md bg-blue-100 px-1 text-xs font-bold text-blue-700">{numberOf(q)}</span>
+                  <div className="mb-2 flex gap-3">
+                    <span className="mt-0.5 flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md bg-blue-100 px-1 text-xs font-bold text-blue-700">{numberOf(q)}</span>
                     <p className="whitespace-pre-wrap font-semibold text-slate-900">{q.text}</p>
                   </div>)}
                   {q.audio && q.audio !== passageAudio && <audio key={q.audio} controls controlsList="nodownload" src={q.audio} className="mb-3 w-full" />}
