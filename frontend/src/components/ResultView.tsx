@@ -187,14 +187,14 @@ export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, sta
         </ul>
       </Card>}
 
-      {/* the student sees the points, sections and written answers only once the result is announced */}
-      {(staff || !noPoints) && result.writing?.length > 0 && <WritingBlock key={result.writing.map((w) => `${w.points}/${w.max_points}`).join()} items={result.writing} onGrade={onGrade} busy={gradeBusy}
+      {/* the student sees the points and the sections once the result is announced; the blocks below are for staff */}
+      {staff && result.writing?.length > 0 && <WritingBlock key={result.writing.map((w) => `${w.points}/${w.max_points}`).join()} items={result.writing} onGrade={onGrade} busy={gradeBusy}
         whoChecks={staff ? (upgrade ? "result.checkingTeacher" : "result.checkingDesk") : undefined} />}
 
-      {result.kind === "UPGRADE" && (Number(result.speaking_points) > 0 || result.speaking_score !== null || !!onSpeaking) && (
+      {staff && result.kind === "UPGRADE" && (Number(result.speaking_points) > 0 || result.speaking_score !== null || !!onSpeaking) && (
         <ManualPartBlock part="speaking" key={`s${result.speaking_score}`} result={result} onSave={onSpeaking} busy={gradeBusy} staff={staff} />
       )}
-      {result.kind === "UPGRADE" && (Number(result.writing_points) > 0 || result.writing_score != null) && (
+      {staff && result.kind === "UPGRADE" && (Number(result.writing_points) > 0 || result.writing_score != null) && (
         <ManualPartBlock part="writing" key={`w${result.writing_score}`} result={result} onSave={onPaperWriting} busy={gradeBusy} staff={staff} />
       )}
 
@@ -237,7 +237,7 @@ export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, sta
         </Card>
       )}
 
-      {upgrade && !result.writing_pending && (
+      {staff && upgrade && !result.writing_pending && (
         <Card title={t("result.upgradeStatus")}>
           {result.approval_status === "NOT_REQUIRED"  // an older result decided by the score alone
             ? <p className={cx("text-sm", result.passed ? "text-emerald-700" : "text-red-600")}>{result.passed ? t("result.passed") : t("result.upgradeFailed")}</p>
