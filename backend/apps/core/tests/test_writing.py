@@ -73,7 +73,13 @@ class WritingFlowTests(TestCase):
         self.assertEqual(c.get(f"{API}/results/{res.id}/").json()["writing"], [])
         done = tc.get(f"{API}/results/{res.id}/").json()["writing"][0]
         self.assertEqual((done["points"], done["feedback"], done["needs_review"]), (7.0, "Good, check the tenses.", False))
-        self.assertEqual(tc.post(url, {"grades": [{"question_id": w.id, "points": 9}]}, format="json").json()["code"], "writing_not_pending")
+        # before the decision the score can be corrected, also "out of" another maximum (like speaking)
+        self.assertEqual(tc.post(url, {"grades": [{"question_id": w.id, "points": 16, "max": 15}]}, format="json").json()["code"], "points_out_of_range")
+        d = tc.post(url, {"grades": [{"question_id": w.id, "points": 12, "max": 15}]}, format="json").json()
+        self.assertEqual((float(d["total_score"]), float(d["max_score"]), d["writing"][0]["max_points"]), (13.0, 16.0, 15.0))
+        self.assertEqual(d["approval_status"], "PENDING")
+        self.assertEqual(tc.post(f"{API}/results/{res.id}/reject/").status_code, 200)
+        self.assertEqual(tc.post(url, {"grades": [{"question_id": w.id, "points": 9}]}, format="json").json()["code"], "result_locked")
 
     def test_placement_decision_waits_for_the_writing_score(self):
         StudentProfile.objects.filter(pk=self.student.pk).update(current_level=None)   # a new student, not placed yet

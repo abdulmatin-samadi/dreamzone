@@ -15,41 +15,56 @@ function AnswerText({ v }: { v: ReviewItem["student_answer"] | ReviewItem["corre
 }
 
 /** Written answers: the student sees "being checked" or the score; reception (guests) or the teacher (upgrades) types the points. */
-function WritingBlock({ items, onGrade, busy, whoChecks }: { items: WritingItem[]; onGrade?: (grades: { question_id: number; points: number; feedback: string }[]) => void; busy?: boolean; whoChecks?: string }) {
+function WritingBlock({ items, onGrade, busy, whoChecks }: { items: WritingItem[]; onGrade?: (grades: { question_id: number; points: number; feedback: string; max: number }[]) => void; busy?: boolean; whoChecks?: string }) {
   const { t } = useTranslation();
-  const [vals, setVals] = useState<Record<number, { points: string; feedback: string }>>({});
-  const set = (id: number, k: "points" | "feedback", v: string) => setVals((s) => ({ ...s, [id]: { points: s[id]?.points ?? "", feedback: s[id]?.feedback ?? "", [k]: v } }));
-  const ready = items.filter((i) => i.needs_review && vals[i.question_id]?.points !== undefined && vals[i.question_id]?.points !== "");
-  const valid = ready.every((i) => { const p = Number(vals[i.question_id].points); return p >= 0 && p <= i.max_points; });
+  // like speaking: the reviewer types the points and what the writing is out of; it can be corrected until the decision
+  const start = () => Object.fromEntries(items.map((i) => [i.question_id, {
+    points: i.points == null || i.needs_review ? "" : String(i.points), feedback: i.feedback ?? "", max: String(i.max_points) }]));
+  const [vals, setVals] = useState<Record<number, { points: string; feedback: string; max: string }>>(start);
+  const set = (id: number, k: "points" | "feedback" | "max", v: string) => setVals((s) => ({ ...s, [id]: { ...s[id], [k]: v } }));
+  const gradable = items.filter((i) => i.text);
+  const ready = gradable.filter((i) => vals[i.question_id]?.points !== "");
+  const valid = ready.every((i) => { const v = vals[i.question_id]; const p = Number(v.points), m = Number(v.max); return m > 0 && p >= 0 && p <= m; });
   return (
-    <Card title={t("result.writing")}>
+    <Card title={`✍️ ${t("result.writing")}`}>
       <div className="space-y-5">
-        {items.map((w) => (
-          <div key={w.question_id} className="rounded-xl border border-slate-200 p-4">
-            <p className="text-sm font-semibold text-slate-800">{w.prompt}</p>
-            <p className="mt-3 whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-800">{w.text || <span className="italic text-slate-400">{t("result.noAnswer")}</span>}</p>
-            <p className="mt-1 text-xs text-slate-500">{t("exam.wordCount", { n: w.words })}</p>
-            {w.needs_review ? (
-              onGrade ? (
-                <div className="mt-3 grid gap-3 sm:grid-cols-[10rem_1fr]">
-                  <label className="text-sm font-medium text-slate-700">{t("result.points")} (0–{w.max_points})
-                    <input type="number" min={0} max={w.max_points} step="0.5" value={vals[w.question_id]?.points ?? ""} onChange={(e) => set(w.question_id, "points", e.target.value)}
+        {items.map((w) => {
+          const v = vals[w.question_id];
+          return (
+            <div key={w.question_id} className="rounded-xl border border-slate-200 p-4">
+              <p className="text-sm font-semibold text-slate-800">{w.prompt}</p>
+              <p className="mt-3 whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-800">{w.text || <span className="italic text-slate-400">{t("result.noAnswer")}</span>}</p>
+              <p className="mt-1 text-xs text-slate-500">{t("exam.wordCount", { n: w.words })}</p>
+              <div className="mt-3 text-sm">
+                {w.needs_review
+                  ? <Badge tone="amber">{t(onGrade ? "result.paperWritingPending" : whoChecks ?? "result.checking")}</Badge>
+                  : w.text && <><Badge tone="green">{fmt(w.points ?? 0)} / {fmt(w.max_points)} {t("exam.points")}</Badge>{!onGrade && w.feedback && <p className="mt-2 text-slate-600">“{w.feedback}”</p>}</>}
+              </div>
+              {onGrade && w.text && (
+                <div className="mt-3 grid gap-3 sm:grid-cols-[10rem_10rem_1fr]">
+                  <label className="text-sm font-medium text-slate-700">{t("result.points")} (0–{fmt(Number(v.max) || 0)})
+                    <input type="number" min={0} max={Number(v.max) || undefined} step="0.5" value={v.points} onChange={(e) => set(w.question_id, "points", e.target.value)}
                       className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                   </label>
-                  <Textarea label={t("result.feedback")} rows={2} value={vals[w.question_id]?.feedback ?? ""} onChange={(e) => set(w.question_id, "feedback", e.target.value)} />
+                  <label className="text-sm font-medium text-slate-700">{t("result.paperWritingMax")}
+                    <input type="number" min={1} step="0.5" value={v.max} onChange={(e) => set(w.question_id, "max", e.target.value)}
+                      className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                  </label>
+                  <Textarea label={t("result.feedback")} rows={2} value={v.feedback} onChange={(e) => set(w.question_id, "feedback", e.target.value)} />
                 </div>
-              ) : <Badge tone="amber">{t(whoChecks ?? "result.checking")}</Badge>
-            ) : (
-              <div className="mt-3 text-sm"><Badge tone="green">{fmt(w.points ?? 0)} / {fmt(w.max_points)}</Badge>{w.feedback && <p className="mt-2 text-slate-600">“{w.feedback}”</p>}</div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          );
+        })}
       </div>
-      {onGrade && items.some((i) => i.needs_review) && (
-        <Button className="mt-4" loading={busy} disabled={!ready.length || !valid}
-          onClick={() => onGrade(ready.map((i) => ({ question_id: i.question_id, points: Number(vals[i.question_id].points), feedback: vals[i.question_id].feedback ?? "" })))}>
-          {t("result.saveScores")}
-        </Button>
+      {onGrade && gradable.length > 0 && (
+        <div className="mt-4">
+          <Button loading={busy} disabled={!ready.length || !valid}
+            onClick={() => onGrade(ready.map((i) => ({ question_id: i.question_id, points: Number(vals[i.question_id].points), feedback: vals[i.question_id].feedback, max: Number(vals[i.question_id].max) })))}>
+            {t(gradable.some((i) => i.needs_review) ? "result.savePaperWriting" : "result.updatePaperWriting")}
+          </Button>
+          <p className="mt-2 text-xs text-slate-500">{t("result.speakingHint")}</p>
+        </div>
       )}
     </Card>
   );
@@ -173,7 +188,7 @@ export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, sta
       </Card>}
 
       {/* the student sees the points, sections and written answers only once the result is announced */}
-      {(staff || !noPoints) && result.writing?.length > 0 && <WritingBlock items={result.writing} onGrade={onGrade} busy={gradeBusy}
+      {(staff || !noPoints) && result.writing?.length > 0 && <WritingBlock key={result.writing.map((w) => `${w.points}/${w.max_points}`).join()} items={result.writing} onGrade={onGrade} busy={gradeBusy}
         whoChecks={staff ? (upgrade ? "result.checkingTeacher" : "result.checkingDesk") : undefined} />}
 
       {result.kind === "UPGRADE" && (Number(result.speaking_points) > 0 || result.speaking_score !== null || !!onSpeaking) && (

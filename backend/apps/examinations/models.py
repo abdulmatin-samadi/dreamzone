@@ -224,6 +224,8 @@ class StudentAnswer(models.Model):
     answer = models.JSONField(default=dict)
     is_correct = models.BooleanField(null=True)
     points_awarded = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    max_points = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True,
+                                     help_text="Writing: what the reviewer scored it out of (empty = the question's points).")
     answered_at = models.DateTimeField(auto_now=True)
     # Writing answers are scored by a teacher
     needs_review = models.BooleanField(default=False)

@@ -118,7 +118,7 @@ class ResultDetailSerializer(ResultListSerializer):
             if self.context["request"].user.role == Role.STUDENT and not announced(obj):
                 continue  # no points for the student
             out.append({
-                "question_id": q.id, "prompt": " ".join(x for x in (q.instruction, q.text) if x), "text": text, "max_points": float(q.points),
+                "question_id": q.id, "prompt": " ".join(x for x in (q.instruction, q.text) if x), "text": text, "max_points": float(a.max_points or q.points) if a else float(q.points),
                 "points": float(a.points_awarded) if a and not a.needs_review else None,
                 "feedback": a.feedback if a else "", "needs_review": bool(a and a.needs_review),
                 "words": len(text.split()),

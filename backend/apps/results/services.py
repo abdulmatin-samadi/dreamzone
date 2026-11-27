@@ -71,10 +71,11 @@ def _totals(attempt, vqs):
     for vq in vqs:
         q = vq.question
         sec = sections[q.section]
-        sec["max"] += q.points
-        sec["total"] += 1
-        max_score += q.points
         ans = answers.get(q.id)
+        top = ans.max_points if (ans is not None and ans.max_points and q.question_type == QuestionType.WRITING) else q.points
+        sec["max"] += top
+        sec["total"] += 1
+        max_score += top
         if ans is None or is_blank(q.question_type, ans.answer):
             unanswered += 1
             continue
@@ -139,10 +140,15 @@ def grade_writing(result_id, *, user, grades):
         ExamResult.objects.select_for_update(of=("self",))
         .select_related("examination", "level", "attempt__variant", "student__user").get(pk=result_id)
     )
-    if not result.writing_pending:
-        raise DomainError("writing_not_pending")
+    from apps.accounts.models import Role
+
+    if result.approval_status in (ApprovalStatus.APPROVED, ApprovalStatus.REJECTED) and user.role != Role.ADMIN:
+        raise DomainError("result_locked")  # decided: only the admin may still change the writing score
+    was_pending = result.writing_pending
     attempt = result.attempt
-    answers = {a.question_id: a for a in StudentAnswer.objects.filter(attempt=attempt, needs_review=True)}
+    # every written answer that was not left blank: scored for the first time or corrected
+    answers = {a.question_id: a for a in StudentAnswer.objects.filter(attempt=attempt, question__question_type=QuestionType.WRITING)
+               if a.needs_review or a.graded_at is not None}
     questions = {vq.question_id: vq.question for vq in _variant_questions(attempt)}
     now = timezone.now()
     for g in grades:
@@ -153,13 +159,25 @@ def grade_writing(result_id, *, user, grades):
             points = Decimal(str(g.get("points")))
         except ArithmeticError:
             raise DomainError("invalid_points", status_code=400)
-        if points < 0 or points > q.points:
+        top = ans.max_points or q.points
+        if g.get("max") not in (None, ""):
+            try:
+                top = Decimal(str(g.get("max")))  # the reviewer says what the writing is out of, like speaking
+            except ArithmeticError:
+                raise DomainError("invalid_points", status_code=400)
+            if top <= 0:
+                raise DomainError("invalid_points", status_code=400)
+        if points < 0 or points > top:
             raise DomainError("points_out_of_range", status_code=400)
-        ans.points_awarded, ans.needs_review = points, False
+        ans.points_awarded, ans.needs_review, ans.max_points = points, False, (None if top == q.points else top)
         ans.feedback, ans.graded_by, ans.graded_at = str(g.get("feedback", ""))[:2000], user, now
-        ans.save(update_fields=["points_awarded", "needs_review", "feedback", "graded_by", "graded_at"])
+        ans.save(update_fields=["points_awarded", "needs_review", "max_points", "feedback", "graded_by", "graded_at"])
     pending = _recompute(result)
     result.writing_pending = pending > 0
+    if result.approval_status == ApprovalStatus.APPROVED:
+        result.passed = True  # a decision already taken stays the decision
+    elif result.approval_status == ApprovalStatus.REJECTED:
+        result.passed = False
     result.save()
     from apps.audit.services import record
 
@@ -167,8 +185,8 @@ def grade_writing(result_id, *, user, grades):
            detail={"result": result.pk, "exam": result.examination.title,
                    "scores": [{"question": g.get("question_id"), "points": str(g.get("points"))} for g in grades],
                    "total": f"{result.total_score}/{result.max_score}"})
-    if not result.writing_pending:
-        _post_process(result)
+    if was_pending and not result.writing_pending:
+        _post_process(result)  # only the first complete scoring opens the decision step
     return result
 
 
