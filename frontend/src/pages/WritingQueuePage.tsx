@@ -19,7 +19,7 @@ export default function WritingQueuePage() {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["writing-queue"], queryFn: async () => (await api.get<QueueRow[]>("/results/writing-queue/")).data });
   const [idx, setIdx] = useState(0);
-  const [vals, setVals] = useState<Record<number, { points: string; feedback: string }>>({});
+  const [vals, setVals] = useState<Record<number, { points: string; feedback: string; max?: string }>>({});
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(0);
   const firstInput = useRef<HTMLInputElement>(null);
@@ -37,19 +37,21 @@ export default function WritingQueuePage() {
     </>
   );
 
-  const set = (id: number, k: "points" | "feedback", v: string) => setVals((s) => ({ ...s, [id]: { points: s[id]?.points ?? "", feedback: s[id]?.feedback ?? "", [k]: v } }));
+  const set = (id: number, k: "points" | "feedback" | "max", v: string) => setVals((s) => ({ ...s, [id]: { points: s[id]?.points ?? "", feedback: s[id]?.feedback ?? "", max: s[id]?.max, [k]: v } }));
+  // like speaking: the reviewer may say what the writing is out of (e.g. 15 instead of the question's 10)
+  const maxOf = (w: { question_id: number; max_points: number }) => Number(vals[w.question_id]?.max ?? w.max_points);
   const valid = cur.writing.every((w) => {
     const raw = vals[w.question_id]?.points;
     if (raw === undefined || raw === "") return false;
-    const p = Number(raw);
-    return p >= 0 && p <= w.max_points;
+    const p = Number(raw), m = maxOf(w);
+    return m > 0 && p >= 0 && p <= m;
   });
 
   const save = async () => {
     setBusy(true);
     try {
       await api.post(`/results/${cur.id}/grade-writing/`, {
-        grades: cur.writing.map((w) => ({ question_id: w.question_id, points: Number(vals[w.question_id].points), feedback: vals[w.question_id].feedback ?? "" })),
+        grades: cur.writing.map((w) => ({ question_id: w.question_id, points: Number(vals[w.question_id].points), feedback: vals[w.question_id].feedback ?? "", max: maxOf(w) })),
       });
       notify.ok("writing.saved");
       setDone((d) => d + 1);
@@ -92,11 +94,16 @@ export default function WritingQueuePage() {
                 {w.text || <span className="italic text-slate-400">{t("result.noAnswer")}</span>}
               </div>
               <p className="mt-1 text-xs text-slate-500">{t("exam.wordCount", { n: w.words })}</p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-[10rem_1fr]">
-                <label className="text-sm font-medium text-slate-700">{t("result.points")} (0–{w.max_points})
-                  <input ref={i === 0 ? firstInput : undefined} type="number" min={0} max={w.max_points} step="0.5" inputMode="decimal"
+              <div className="mt-3 grid gap-3 sm:grid-cols-[10rem_10rem_1fr]">
+                <label className="text-sm font-medium text-slate-700">{t("result.points")} (0–{maxOf(w) || 0})
+                  <input ref={i === 0 ? firstInput : undefined} type="number" min={0} max={maxOf(w) || undefined} step="0.5" inputMode="decimal"
                     value={vals[w.question_id]?.points ?? ""} onChange={(e) => set(w.question_id, "points", e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && valid && !busy) { e.preventDefault(); void save(); } }}
+                    className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-lg font-semibold" />
+                </label>
+                <label className="text-sm font-medium text-slate-700">{t("result.paperWritingMax")}
+                  <input type="number" min={1} step="0.5" inputMode="decimal" value={vals[w.question_id]?.max ?? String(w.max_points)}
+                    onChange={(e) => set(w.question_id, "max", e.target.value)}
                     className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-lg font-semibold" />
                 </label>
                 <Textarea label={t("result.feedback")} rows={2} value={vals[w.question_id]?.feedback ?? ""} onChange={(e) => set(w.question_id, "feedback", e.target.value)} />
