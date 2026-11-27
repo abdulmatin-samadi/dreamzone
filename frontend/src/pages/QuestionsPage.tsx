@@ -47,7 +47,7 @@ function OptionsEditor({ type, options, onChange }: { type: QType; options: Opti
   );
 }
 
-function QuestionModal({ editing, onClose, onSaved }: { editing: Question | "new" | null; onClose: () => void; onSaved: () => void }) {
+export function QuestionModal({ editing, onClose, onSaved }: { editing: Question | "new" | null; onClose: () => void; onSaved: () => void }) {
   const { t } = useTranslation();
   const notify = useNotify();
   const levels = useGet<Level[]>("levels");

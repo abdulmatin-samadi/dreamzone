@@ -11,6 +11,7 @@ import { KindBadge, OutcomeBadge, StateBadge } from "../components/badges";
 import { useNotify } from "../components/Toast";
 import { Badge, BarList, Button, Card, Checkbox, ConfirmDialog, EmptyState, Input, Modal, PageHeader, PageLoader, Pagination, ProgressBar, SearchInput, Select, StatCard, Table, Tabs, Td, Textarea } from "../components/ui";
 import { fmtDate, fromLocalInput, num, useAll, useGet, useList } from "../lib/hooks";
+import { QuestionModal } from "./QuestionsPage";
 
 /* ------------------------------------------------------------------ settings */
 function SettingsTab({ exam }: { exam: Exam }) {
@@ -286,6 +287,13 @@ function VariantsTab({ exam }: { exam: Exam }) {
       refresh(); void qc.invalidateQueries({ queryKey: ["questions"] });
     } catch (e) { notify.fail(e); } finally { setCopying(null); }
   };
+  // edit a question of the variant in the same form as the question bank
+  const [editing, setEditing] = useState<Question | null>(null);
+  const [opening, setOpening] = useState<number | null>(null);
+  const openEditor = async (questionId: number) => {
+    setOpening(questionId);
+    try { const { data } = await api.get<Question>(`/questions/${questionId}/`); setEditing(data); } catch (e) { notify.fail(e); } finally { setOpening(null); }
+  };
   const move = (v: Variant, i: number, d: number) => {
     const ids = v.questions.map((x) => x.question);
     [ids[i], ids[i + d]] = [ids[i + d], ids[i]];
@@ -307,6 +315,7 @@ function VariantsTab({ exam }: { exam: Exam }) {
                   <span className="w-6 text-slate-400">{i + 1}.</span>
                   <span className="min-w-0 flex-1"><span className="line-clamp-1">{q.text}</span><span className="text-xs text-slate-500">{t(`sections.${q.section}`)} · {t(`qtypes.${q.question_type}`)} · {num(q.points)}</span></span>
                   {!exam.locked && exam.can_edit && <span className="flex shrink-0">
+                    <Button size="sm" variant="ghost" loading={opening === q.question} onClick={() => openEditor(q.question)} title={t("questions.edit")} aria-label={t("questions.edit")}>✏️ {t("common.edit")}</Button>
                     <Button size="sm" variant="ghost" disabled={i === 0} onClick={() => move(v, i, -1)} aria-label="up">↑</Button>
                     <Button size="sm" variant="ghost" disabled={i === v.questions.length - 1} onClick={() => move(v, i, 1)} aria-label="down">↓</Button>
                     <Button size="sm" variant="ghost" onClick={() => saveQuestions(v, v.questions.filter((x) => x.id !== q.id).map((x) => x.question))}>✕</Button></span>}
@@ -316,6 +325,7 @@ function VariantsTab({ exam }: { exam: Exam }) {
           )}
         </Card>
       ))}
+      <QuestionModal editing={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); void qc.invalidateQueries({ queryKey: ["questions"] }); }} />
       <TextImportModal variant={pasting} onClose={() => setPasting(null)} onDone={() => { setPasting(null); refresh(); void qc.invalidateQueries({ queryKey: ["questions"] }); }} />
       <ImportModal variant={importing} exam={exam} onClose={() => setImporting(null)} onDone={(closeNow) => { if (closeNow) setImporting(null); refresh(); void qc.invalidateQueries({ queryKey: ["questions"] }); }} />
       <QuestionPicker open={!!picker} exclude={picker?.questions.map((q) => q.question) ?? []} onClose={() => setPicker(null)}
