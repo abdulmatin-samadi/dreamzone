@@ -176,8 +176,6 @@ const uz: Dict<typeof en> = {
     fs: {
       stoppedDesk: "To'liq ekrandan chiqilgani uchun test to'xtatildi. Javoblar saqlandi. Davom ettirish uchun yuqoridagi «To'xtatilgan imtihonlar» ro'yxatidan foydalaning.",
       rule: "Imtihon to'liq ekran rejimida ochiladi. To'liq ekrandan chiqsangiz yoki boshqa oynaga o'tsangiz, qaytishga 10 soniya bor. Qaytmasangiz imtihon to'xtatiladi va keyingi qarorni o'qituvchi qabul qiladi.",
-      homeScreen: "iPhone'da to'liq ekranda ishlash uchun: Safari'da pastdagi «Ulashish» (□↑) tugmasini bosing → «Bosh ekranga qo'shish» (Add to Home Screen) → «Qo'shish». Keyin Dreamzone'ni bosh ekrandagi belgidan oching: sahifa brauzer panellarisiz, butun ekranda ochiladi.",
-      unsupported: "Bu brauzer imtihonni to'liq ekranda ko'rsata olmaydi. Shu sahifani ochiq va oldingi planda saqlang: boshqa ilova yoki oynaga 10 soniyadan ortiq o'tsangiz, imtihon to'xtatiladi.",
       bodyNoFs: "Siz imtihon sahifasidan chiqdingiz. {{n}} soniya ichida qayting, aks holda imtihon to'xtatiladi.", returnNoFs: "Imtihonga qaytish",
       title: "To'liq ekranga qayting", body: "Siz to'liq ekran rejimidan chiqdingiz. {{n}} soniya ichida qayting, aks holda imtihon to'xtatiladi.", return: "To'liq ekranga qaytish",
       saved: "Barcha javoblaringiz saqlangan.", stopped: "To'liq ekrandan chiqqaningiz uchun imtihon to'xtatildi. Javoblaringiz saqlandi; davom ettirishni o'qituvchi hal qiladi.",

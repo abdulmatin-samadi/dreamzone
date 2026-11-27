@@ -172,9 +172,6 @@ export const fullscreenSupported = () => {
   const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
   return !!(el.requestFullscreen || el.webkitRequestFullscreen);
 };
-/** Opened from the home screen as an app (no browser bars around the page). */
-export const runningAsApp = () => (navigator as Navigator & { standalone?: boolean }).standalone === true
-  || window.matchMedia?.("(display-mode: fullscreen), (display-mode: standalone)").matches === true;
 export const inFullscreen = () => !!(document.fullscreenElement || (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement);
 export async function enterFullscreen(): Promise<boolean> {
   const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
@@ -434,9 +431,6 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
           <p className="mb-2 text-sm font-semibold text-blue-700">🎧 {t("exam.listen")}</p>
           <audio key={passageAudio} controls controlsList="nodownload" src={passageAudio} className="w-full" />
         </div>
-      )}
-      {!supported && (
-        <div role="alert" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">⚠ {t("exam.fs.unsupported")}</div>
       )}
       <div key={page.key} className={cx("dz-fade grid items-start gap-6", page.passage && !audioOnly && listed.length > 0 && "lg:grid-cols-2")}>
         {page.passage && !audioOnly && (
