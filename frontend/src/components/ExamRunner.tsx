@@ -54,6 +54,12 @@ function FillBox({ value, onChange, className, placeholder }: { value: string; o
   );
 }
 
+/** Split "Instruction  — Example: ..." into the instruction and the example text (without the word "Example"). */
+function splitExample(text: string): [string, string] {
+  const m = text.match(/^(.*?)\s*(?:[\u2014-]\s*)?\bExample\s*[:.-]?\s*(.+)$/is);
+  return m && m[1].trim() ? [m[1].trim().replace(/[\s\u2014-]+$/, ""), m[2].trim()] : [text, ""];
+}
+
 /** A gap inside the sentence: as tall as the text and as wide as what is typed (it grows letter by letter). */
 function InlineGap({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
@@ -408,7 +414,9 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
   const listed = page.qs.filter((q) => !(q.gap_no && gapQs.get(q.gap_no) === q));
   const first = page.numbers[0], last = page.numbers[page.numbers.length - 1];
   const cat = page.qs[0].category;
-  const heading = page.qs[0].instruction ? page.qs[0].instruction
+  // "Complete ... — Example: I get up at 8:00.": the example is shown as a sample row among the questions, not in the heading
+  const [instruction, example] = splitExample(page.qs[0].instruction ?? "");
+  const heading = instruction ? instruction
     : cat === "TFREAD" && page.qs[0].options.length
     ? page.qs[0].options.map((o) => o.text[0] + o.text.slice(1).toLowerCase()).join(" / ")
     : cat ? (t(`exGroups.${cat}`) as string) : (t(`sections.${page.qs[0].section}`) as string);
@@ -455,6 +463,12 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
               {first === last ? t("exam.questionHeading", { n: first, title: heading }) : t("exam.questionsHeading", { a: first, b: last, title: heading })}
             </h2>
             <div className="space-y-2">
+              {example && (
+                <div className="flex items-baseline gap-3 rounded-xl border border-dashed border-sky-300 px-4 py-2.5 text-slate-600 sm:px-6">
+                  <span className="shrink-0 rounded-md bg-amber-100 px-1.5 text-xs font-bold text-amber-800">{t("exam.example")}</span>
+                  <p className="italic">{example}</p>
+                </div>
+              )}
               {listed.map((q) => (
                 <div key={q.id} className={cx("rounded-xl bg-sky-50 px-4 py-2.5 shadow-sm ring-1 ring-sky-100 sm:px-6", listed.length === 1 && "flex min-h-[30vh] flex-col justify-center")}>
                   {q.type === "FILL" && BLANK.test(q.text) ? (
