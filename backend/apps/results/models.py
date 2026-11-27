@@ -43,6 +43,12 @@ class ExamResult(models.Model):
     speaking_feedback = models.TextField(blank=True)
     speaking_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     speaking_at = models.DateTimeField(null=True, blank=True)
+    # writing done on paper (exam.writing_points): scored the same way as speaking
+    writing_score = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
+    writing_max = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
+    writing_feedback = models.TextField(blank=True)
+    writing_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    writing_at = models.DateTimeField(null=True, blank=True)
     writing_pending = models.BooleanField(default=False, db_index=True, help_text="Written answers still wait for the teacher's score.")
 
     # placement workflow

@@ -32,7 +32,7 @@ class ResultViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.G
     def get_permissions(self):
         if self.action in ("grade_writing", "writing_queue"):
             return [IsTeacherOrReceptionist()]  # guests' writing -> reception, upgrade writing -> teacher
-        if self.action in ("approve", "reject", "export", "grade_speaking"):
+        if self.action in ("approve", "reject", "export", "grade_speaking", "grade_paper_writing"):
             return [IsAdminOrTeacher()]
         if self.action == "override":
             return [IsAdmin()]
@@ -64,6 +64,12 @@ class ResultViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.G
     def grade_speaking(self, request, pk=None):
         result = services.grade_speaking(self.get_object().pk, user=request.user, points=request.data.get("points"),
                                          feedback=request.data.get("feedback", ""), max_points=request.data.get("max"))
+        return Response(ResultDetailSerializer(result, context={"request": request}).data)
+
+    @action(detail=True, methods=["post"], url_path="writing-score")
+    def grade_paper_writing(self, request, pk=None):
+        result = services.grade_part(self.get_object().pk, "writing", user=request.user, points=request.data.get("points"),
+                                     feedback=request.data.get("feedback", ""), max_points=request.data.get("max"))
         return Response(ResultDetailSerializer(result, context={"request": request}).data)
 
     @action(detail=True, methods=["post"], url_path="grade-writing")

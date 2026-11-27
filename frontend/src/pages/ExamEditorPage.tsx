@@ -23,7 +23,7 @@ function SettingsTab({ exam }: { exam: Exam }) {
   const variants = useGet<Variant[]>("variants", { examination: exam.id });
   // thresholds are points: show what each variant is worth so the admin picks a sensible mark
   const worth = variants.data?.filter((v) => v.question_count).map((v) => `${v.name}: ${num(v.total_points)}`).join(", ");
-  const [f, setF] = useState({ ...exam, teachers: exam.teachers, passing_score: Number(exam.passing_score), high_threshold: exam.high_threshold == null ? "" : Number(exam.high_threshold), speaking_points: String(Number(exam.speaking_points ?? 0)) });
+  const [f, setF] = useState({ ...exam, teachers: exam.teachers, passing_score: Number(exam.passing_score), high_threshold: exam.high_threshold == null ? "" : Number(exam.high_threshold), speaking_points: String(Number(exam.speaking_points ?? 0)), writing_points: String(Number(exam.writing_points ?? 0)) });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const placement = exam.kind === "PLACEMENT";
@@ -35,7 +35,7 @@ function SettingsTab({ exam }: { exam: Exam }) {
         title: f.title, level: f.level, target_level: placement ? null : f.target_level, instructions: f.instructions,
         duration_minutes: f.duration_minutes, passing_score: f.passing_score, high_threshold: placement && f.high_threshold !== "" ? f.high_threshold : null,
         shuffle_questions: f.shuffle_questions, shuffle_options: f.shuffle_options, show_correct_answers: f.show_correct_answers,
-        ...(placement ? {} : { speaking_points: f.speaking_points === "" ? 0 : Number(f.speaking_points) }),
+        ...(placement ? {} : { speaking_points: f.speaking_points === "" ? 0 : Number(f.speaking_points), writing_points: f.writing_points === "" ? 0 : Number(f.writing_points) }),
         ...(user!.role === "ADMIN" ? { teachers: f.teachers } : {}),
       });
       notify.ok("common.saved"); void qc.invalidateQueries({ queryKey: ["examinations"] });
@@ -54,6 +54,8 @@ function SettingsTab({ exam }: { exam: Exam }) {
             hint={[placement ? t("exams.lowThresholdHint") : "", worth ? t("exams.variantWorth", { list: worth }) : t("exams.noQuestionsYet")].filter(Boolean).join(" ")} onChange={(e) => setF({ ...f, passing_score: Number(e.target.value) })} />
           {!placement && <Input label={`${t("exams.speakingPoints")} (${t("exam.points")})`} type="number" min={0} step="0.5" value={f.speaking_points} hint={t("exams.speakingHint")}
             onChange={(e) => setF({ ...f, speaking_points: e.target.value })} />}
+          {!placement && <Input label={`${t("exams.writingPoints")} (${t("exam.points")})`} type="number" min={0} step="0.5" value={f.writing_points} hint={t("exams.writingHint")}
+            onChange={(e) => setF({ ...f, writing_points: e.target.value })} />}
           {placement && <Input label={`${t("exams.highThreshold")} (${t("exam.points")})`} type="number" min={0} step="0.5" value={f.high_threshold} error={errors.high_threshold} hint={t("exams.highThresholdHint")} onChange={(e) => setF({ ...f, high_threshold: e.target.value === "" ? "" : Number(e.target.value) })} />}
         </div>
         <Textarea label={t("exams.instructions")} value={f.instructions} onChange={(e) => setF({ ...f, instructions: e.target.value })} />

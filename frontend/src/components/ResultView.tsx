@@ -55,25 +55,38 @@ function WritingBlock({ items, onGrade, busy, whoChecks }: { items: WritingItem[
   );
 }
 
-/** Speaking: the teacher / admin types the points (added to the total); the student sees the score once given. */
-function SpeakingBlock({ result, onSave, busy, staff }: { result: ResultDetail; onSave?: (points: number, feedback: string, max?: number) => void; busy?: boolean; staff?: boolean }) {
+type Part = "speaking" | "writing";
+const PART_KEYS: Record<Part, { title: string; pending: string; max: string; save: string; update: string }> = {
+  speaking: { title: "🗣 sections.SPEAKING", pending: "result.speakingPending", max: "result.speakingMax", save: "result.saveSpeaking", update: "result.updateSpeaking" },
+  writing: { title: "✍️ sections.WRITING", pending: "result.paperWritingPending", max: "result.paperWritingMax", save: "result.savePaperWriting", update: "result.updatePaperWriting" },
+};
+
+/** Speaking / writing on paper: the teacher / admin types the points (added to the total). */
+function ManualPartBlock({ part, result, onSave, busy, staff }: { part: Part; result: ResultDetail; onSave?: (points: number, feedback: string, max?: number) => void; busy?: boolean; staff?: boolean }) {
   const { t } = useTranslation();
-  // the exam sets the speaking maximum; when it has none, the reviewer types it here
-  const fixed = Number(result.speaking_points) > 0;
-  const [maxIn, setMaxIn] = useState(result.speaking_max ? String(Number(result.speaking_max)) : "10");
-  const top = fixed ? Number(result.speaking_points) : Number(maxIn);
-  const [points, setPoints] = useState(result.speaking_score === null ? "" : String(Number(result.speaking_score)));
-  const [feedback, setFeedback] = useState(result.speaking_feedback ?? "");
+  const k = PART_KEYS[part];
+  const examPoints = part === "speaking" ? result.speaking_points : result.writing_points;
+  const score = part === "speaking" ? result.speaking_score : result.writing_score;
+  const max = part === "speaking" ? result.speaking_max : result.writing_max;
+  const given = part === "speaking" ? result.speaking_feedback : result.writing_feedback;
+  const by = part === "speaking" ? result.speaking_by_name : result.writing_by_name;
+  // the exam sets the maximum; when it has none, the reviewer types it here
+  const fixed = Number(examPoints) > 0;
+  const [maxIn, setMaxIn] = useState(max ? String(Number(max)) : "10");
+  const top = fixed ? Number(examPoints) : Number(maxIn);
+  const [points, setPoints] = useState(score == null ? "" : String(Number(score)));
+  const [feedback, setFeedback] = useState(given ?? "");
   const valid = top > 0 && points !== "" && Number(points) >= 0 && Number(points) <= top;
+  const [icon, titleKey] = k.title.split(" ");
   return (
-    <Card title={`🗣 ${t("sections.SPEAKING")}`}>
-      {result.speaking_score !== null ? (
+    <Card title={`${icon} ${t(titleKey)}`}>
+      {score != null ? (
         <div className="mb-3 text-sm">
-          <Badge tone="green">{fmt(result.speaking_score)} / {fmt(top)} {t("exam.points")}</Badge>
-          {staff && result.speaking_by_name && <span className="ml-2 text-slate-500">{t("result.speakingBy", { name: result.speaking_by_name })}</span>}
-          {result.speaking_feedback && <p className="mt-2 text-slate-600">“{result.speaking_feedback}”</p>}
+          <Badge tone="green">{fmt(score)} / {fmt(top)} {t("exam.points")}</Badge>
+          {staff && by && <span className="ml-2 text-slate-500">{t("result.speakingBy", { name: by })}</span>}
+          {given && <p className="mt-2 text-slate-600">“{given}”</p>}
         </div>
-      ) : <p className="mb-3"><Badge tone="amber">{t("result.speakingPending")}</Badge></p>}
+      ) : <p className="mb-3"><Badge tone="amber">{t(k.pending)}</Badge></p>}
       {onSave && (
         <div className={cx("grid gap-3", fixed ? "sm:grid-cols-[10rem_1fr]" : "sm:grid-cols-[10rem_10rem_1fr]")}>
           <label className="text-sm font-medium text-slate-700">{t("result.points")} (0–{fmt(top || 0)})
@@ -81,14 +94,14 @@ function SpeakingBlock({ result, onSave, busy, staff }: { result: ResultDetail; 
               className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           </label>
           {!fixed && (
-            <label className="text-sm font-medium text-slate-700">{t("result.speakingMax")}
+            <label className="text-sm font-medium text-slate-700">{t(k.max)}
               <input type="number" min={1} step="0.5" value={maxIn} onChange={(e) => setMaxIn(e.target.value)}
                 className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
             </label>
           )}
           <Textarea label={t("result.feedback")} rows={2} value={feedback} onChange={(e) => setFeedback(e.target.value)} />
           <div className="sm:col-span-2">
-            <Button loading={busy} disabled={!valid} onClick={() => onSave(Number(points), feedback, fixed ? undefined : top)}>{t(result.speaking_score === null ? "result.saveSpeaking" : "result.updateSpeaking")}</Button>
+            <Button loading={busy} disabled={!valid} onClick={() => onSave(Number(points), feedback, fixed ? undefined : top)}>{t(score == null ? k.save : k.update)}</Button>
             <p className="mt-2 text-xs text-slate-500">{t("result.speakingHint")}</p>
           </div>
         </div>
@@ -97,10 +110,11 @@ function SpeakingBlock({ result, onSave, busy, staff }: { result: ResultDetail; 
   );
 }
 
-export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, staff, onSpeaking }: {
+export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, staff, onSpeaking, onPaperWriting }: {
   result: ResultDetail; onOffer?: (accept: boolean) => void; offerBusy?: boolean; staff?: boolean;  // staff = a teacher / admin / desk looks at someone else's result
   onGrade?: (grades: { question_id: number; points: number; feedback: string }[]) => void; gradeBusy?: boolean;
   onSpeaking?: (points: number, feedback: string, max?: number) => void;
+  onPaperWriting?: (points: number, feedback: string, max?: number) => void;
 }) {
   const { t } = useTranslation();
   const upgrade = result.kind === "UPGRADE";
@@ -163,7 +177,10 @@ export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, sta
         whoChecks={staff ? (upgrade ? "result.checkingTeacher" : "result.checkingDesk") : undefined} />}
 
       {result.kind === "UPGRADE" && (Number(result.speaking_points) > 0 || result.speaking_score !== null || !!onSpeaking) && (
-        <SpeakingBlock key={`${result.speaking_score}`} result={result} onSave={onSpeaking} busy={gradeBusy} staff={staff} />
+        <ManualPartBlock part="speaking" key={`s${result.speaking_score}`} result={result} onSave={onSpeaking} busy={gradeBusy} staff={staff} />
+      )}
+      {result.kind === "UPGRADE" && (Number(result.writing_points) > 0 || result.writing_score != null) && (
+        <ManualPartBlock part="writing" key={`w${result.writing_score}`} result={result} onSave={onPaperWriting} busy={gradeBusy} staff={staff} />
       )}
 
       {/* placement recommendation / level offer: staff see it about the student, never "your result" */}

@@ -28,7 +28,7 @@ class ExaminationSerializer(serializers.ModelSerializer):
         model = Examination
         fields = [
             "id", "kind", "title", "level", "level_code", "target_level", "target_level_code", "instructions",
-            "duration_minutes", "passing_score", "high_threshold", "speaking_points", "status", "shuffle_questions", "shuffle_options",
+            "duration_minutes", "passing_score", "high_threshold", "speaking_points", "writing_points", "status", "shuffle_questions", "shuffle_options",
             "show_correct_answers", "teachers", "teacher_names", "created_by_name", "variant_count", "assignment_count", "attempt_count",
             "locked", "can_edit", "created_at",
         ]
@@ -206,7 +206,9 @@ class MyAssignmentSerializer(ExamAssignmentSerializer):
         return obj.variant.variant_questions.count()
 
     def get_max_points(self, obj):
-        return float(sum(vq.question.points for vq in obj.variant.variant_questions.select_related("question")))
+        exam = obj.examination  # + the speaking / paper-writing parts the teacher scores by hand
+        return float(sum(vq.question.points for vq in obj.variant.variant_questions.select_related("question"))
+                     + exam.speaking_points + exam.writing_points)
 
     def get_passing_points(self, obj):
         return float(obj.examination.passing_score)  # thresholds are kept in points

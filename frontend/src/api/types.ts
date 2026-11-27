@@ -26,7 +26,7 @@ export interface Question {
 }
 export interface Exam {
   id: number; kind: ExamKind; title: string; level: number; level_code: string; target_level: number | null;
-  target_level_code: string | null; instructions: string; duration_minutes: number; passing_score: string; speaking_points: string;
+  target_level_code: string | null; instructions: string; duration_minutes: number; passing_score: string; speaking_points: string; writing_points: string;
   high_threshold: string | null; status: "DRAFT" | "PUBLISHED"; shuffle_questions: boolean; shuffle_options: boolean;
   show_correct_answers: boolean; teachers: number[]; teacher_names: string[]; created_by_name: string | null; variant_count: number; assignment_count: number;
   attempt_count: number; locked: boolean; can_edit: boolean; created_at: string;
@@ -69,7 +69,7 @@ export interface Result {
   offer_status: "NONE" | "PENDING" | "ACCEPTED" | "DECLINED"; placed_level_code: string | null;
   approval_status: "NOT_REQUIRED" | "PENDING" | "APPROVED" | "REJECTED"; teacher_name: string | null;
   started_at: string; finished_at: string | null; attempt_status: string; writing_pending: boolean; created_at: string;
-  speaking_score: string | null; speaking_max: string | null; review_note: string;
+  speaking_score: string | null; speaking_max: string | null; writing_score: string | null; writing_max: string | null; review_note: string;
 }
 export interface ReviewItem {
   question_id: number; text: string; type: QType; section: Section; points: number; points_awarded: number;
@@ -82,6 +82,7 @@ export interface ResultDetail extends Result {
   section_scores: Record<string, SectionScore>; review_note: string; reviewed_by_name: string | null;
   reviewed_at: string | null; is_locked: boolean; answers: ReviewItem[] | null; passing_score: string;  // pass mark in points
   speaking_points: string; speaking_score: string | null; speaking_max: string | null; speaking_feedback: string; speaking_by_name: string | null; speaking_at: string | null;
+  writing_points: string; writing_feedback: string; writing_by_name: string | null; writing_at: string | null;
 }
 export interface LevelChange {
   id: number; student: number; student_name: string; from_level_code: string | null; to_level_code: string;

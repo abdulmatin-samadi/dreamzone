@@ -151,6 +151,21 @@ class SpeakingTests(TestCase):
         self.assertEqual((float(d["total_score"]), float(d["max_score"]), float(d["speaking_max"])), (8.0, 14.0, 10.0))
         self.assertEqual(self.tc.post(f"{API}/results/{self.rid}/approve/").status_code, 200)  # no speaking required
 
+    def test_paper_writing_points_added_and_required_before_decision(self):
+        self.exam.writing_points = 20
+        self.exam.save()
+        url = f"{API}/results/{self.rid}/"
+        self.tc.post(url + "speaking/", {"points": 6})
+        self.assertEqual(self.tc.post(url + "approve/").json()["code"], "writing_score_pending")
+        self.assertEqual(self.sc.post(url + "writing-score/", {"points": 5}).status_code, 403)  # not the student
+        self.assertEqual(self.tc.post(url + "writing-score/", {"points": 21}).json()["code"], "points_out_of_range")
+        d = self.tc.post(url + "writing-score/", {"points": 15, "feedback": "Good ideas"}).json()
+        self.assertEqual((float(d["total_score"]), float(d["max_score"])), (24.0, 34.0))  # 3 + 6 + 15 of 4 + 10 + 20
+        self.assertEqual((d["section_scores"]["WRITING"]["score"], d["section_scores"]["SPEAKING"]["score"]), (15.0, 6.0))
+        mine = self.sc.get(url).json()
+        self.assertEqual((mine["writing_score"], mine["writing_points"]), (None, None))  # the student sees no points
+        self.assertEqual(self.tc.post(url + "approve/").status_code, 200)
+
 
 class JoinByCodeTests(TestCase):
     """A student who types the group code gets the exams given to that group - no level needed."""

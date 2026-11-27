@@ -23,7 +23,7 @@ export default function ExamsPage() {
   const list = useList<Exam>("examinations", { ...f, page });
   const levels = useGet<Level[]>("levels");
   const [create, setCreate] = useState(false);
-  const [form, setForm] = useState({ kind: "UPGRADE", title: "", level: "", target_level: "", duration_minutes: 60, passing_score: "", high_threshold: "" });
+  const [form, setForm] = useState({ kind: "UPGRADE", title: "", level: "", target_level: "", duration_minutes: 60, passing_score: "", high_threshold: "", speaking_points: "", writing_points: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [del, setDel] = useState<Exam | null>(null);
   const [busy, setBusy] = useState(false);
@@ -36,7 +36,7 @@ export default function ExamsPage() {
       const placement = form.kind === "PLACEMENT";
       const { data } = await api.post<Exam>("/examinations/", {
         kind: form.kind, title: form.title, level: Number(form.level), duration_minutes: form.duration_minutes, passing_score: Number(form.passing_score),
-        ...(placement ? { target_level: null, high_threshold: Number(form.high_threshold) } : { target_level: Number(form.target_level) }),
+        ...(placement ? { target_level: null, high_threshold: Number(form.high_threshold) } : { target_level: Number(form.target_level), speaking_points: Number(form.speaking_points || 0), writing_points: Number(form.writing_points || 0) }),
       });
       notify.ok("exams.created"); nav(`/exams/${data.id}`);
     } catch (err) { setErrors(Object.fromEntries(Object.entries(parseError(err).fields).map(([k, v]) => [k, String(v)]))); notify.fail(err); } finally { setBusy(false); }
@@ -91,6 +91,13 @@ export default function ExamsPage() {
             {form.kind === "UPGRADE" && <Select label={t("exams.targetLevel")} required value={form.target_level} error={errors.target_level} onChange={(e) => setForm({ ...form, target_level: e.target.value })}><option value="">—</option>{levels.data?.map((l) => <option key={l.id} value={l.id}>{l.code} — {l.name}</option>)}</Select>}
             <Input label={`${t("exam.duration")} (${t("common.minutes")})`} type="number" min={1} required value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })} />
             <Input label={`${form.kind === "PLACEMENT" ? t("exams.lowThreshold") : t("exam.passingScore")} (${t("exam.points")})`} type="number" min={0} step="0.5" required value={form.passing_score} error={errors.passing_score} hint={`${form.kind === "PLACEMENT" ? t("exams.lowThresholdHint") + " " : ""}${t("exams.pointsExample")}`} onChange={(e) => setForm({ ...form, passing_score: e.target.value })} />
+            {form.kind === "UPGRADE" && <>
+              <Input label={`${t("exams.speakingPoints")} (${t("exam.points")})`} type="number" min={0} step="0.5" value={form.speaking_points} error={errors.speaking_points} placeholder="0"
+                onChange={(e) => setForm({ ...form, speaking_points: e.target.value })} />
+              <Input label={`${t("exams.writingPoints")} (${t("exam.points")})`} type="number" min={0} step="0.5" value={form.writing_points} error={errors.writing_points} placeholder="0"
+                onChange={(e) => setForm({ ...form, writing_points: e.target.value })} />
+              <p className="-mt-2 text-xs text-slate-500 sm:col-span-2">{t("exams.manualPartsHint")}</p>
+            </>}
             {form.kind === "PLACEMENT" && <Input label={`${t("exams.highThreshold")} (${t("exam.points")})`} type="number" min={0} step="0.5" required value={form.high_threshold} error={errors.high_threshold} hint={t("exams.highThresholdHint")} onChange={(e) => setForm({ ...form, high_threshold: e.target.value })} />}
           </div>
         </form>

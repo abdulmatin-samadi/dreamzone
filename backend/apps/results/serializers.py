@@ -28,7 +28,7 @@ class ResultListSerializer(serializers.ModelSerializer):
             "level_code", "target_level_code", "total_score", "max_score", "percentage", "correct_count",
             "incorrect_count", "unanswered_count", "passed", "writing_pending", "recommendation", "recommended_level_code",
             "offer_status", "placed_level_code", "approval_status", "teacher_name", "started_at", "finished_at",
-            "attempt_status", "created_at", "speaking_score", "speaking_max", "review_note",
+            "attempt_status", "created_at", "speaking_score", "speaking_max", "writing_score", "writing_max", "review_note",
         ]
 
     def to_representation(self, obj):
@@ -46,6 +46,7 @@ class ResultListSerializer(serializers.ModelSerializer):
 SCORE_FIELDS = (
     "total_score", "max_score", "percentage", "correct_count", "incorrect_count", "unanswered_count",
     "speaking_score", "speaking_max", "section_scores", "passing_score", "speaking_points",
+    "writing_score", "writing_max", "writing_points",
 )
 
 
@@ -84,11 +85,14 @@ class ResultDetailSerializer(ResultListSerializer):
     passing_score = serializers.DecimalField(source="examination.passing_score", max_digits=7, decimal_places=2, read_only=True)
     speaking_points = serializers.DecimalField(source="examination.speaking_points", max_digits=7, decimal_places=2, read_only=True)
     speaking_by_name = serializers.CharField(source="speaking_by.full_name", read_only=True, default=None)
+    writing_points = serializers.DecimalField(source="examination.writing_points", max_digits=7, decimal_places=2, read_only=True)
+    writing_by_name = serializers.CharField(source="writing_by.full_name", read_only=True, default=None)
 
     class Meta(ResultListSerializer.Meta):
         fields = ResultListSerializer.Meta.fields + [
             "section_scores", "review_note", "reviewed_by_name", "reviewed_at", "is_locked", "answers", "writing", "passing_score",
             "speaking_points", "speaking_score", "speaking_max", "speaking_feedback", "speaking_by_name", "speaking_at",
+            "writing_points", "writing_feedback", "writing_by_name", "writing_at",
         ]
 
     def get_writing(self, obj):

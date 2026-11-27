@@ -61,6 +61,10 @@ export default function ResultDetailPage() {
     setBusy(true);
     try { await api.post(`/results/${r.id}/speaking/`, { points, feedback, ...(max ? { max } : {}) }); notify.ok("result.scoresSaved"); refresh(); } catch (e) { notify.fail(e); } finally { setBusy(false); }
   };
+  const writeScore = async (points: number, feedback: string, max?: number) => {
+    setBusy(true);
+    try { await api.post(`/results/${r.id}/writing-score/`, { points, feedback, ...(max ? { max } : {}) }); notify.ok("result.scoresSaved"); refresh(); } catch (e) { notify.fail(e); } finally { setBusy(false); }
+  };
   const canOffer = r.offer_status === "PENDING" && ["STUDENT", "RECEPTIONIST", "ADMIN"].includes(role);
   return (
     <>
@@ -71,7 +75,7 @@ export default function ResultDetailPage() {
         {role === "ADMIN" && r.kind === "UPGRADE" && r.is_locked && <Button variant="secondary" onClick={() => setOverride(true)}>{t("approvals.override")}</Button>}
       </>} />
       {role !== "STUDENT" && <p className="mb-4 text-sm"><Link className="text-indigo-700 hover:underline" to={`/students/${r.student}`}>{t("result.studentProfile")} →</Link></p>}
-      <ResultView result={r} staff={role !== "STUDENT"} onOffer={canOffer ? answerOffer : undefined} offerBusy={busy} onGrade={canGrade ? grade : undefined} gradeBusy={busy} onSpeaking={canSpeak ? speak : undefined} />
+      <ResultView result={r} staff={role !== "STUDENT"} onOffer={canOffer ? answerOffer : undefined} offerBusy={busy} onGrade={canGrade ? grade : undefined} gradeBusy={busy} onSpeaking={canSpeak ? speak : undefined} onPaperWriting={canSpeak ? writeScore : undefined} />
       {role === "RECEPTIONIST" && r.offer_status === "ACCEPTED" && <Card className="mt-5"><Link className="text-indigo-700" to="/placements">{t("offer.goToPlacements")} →</Link></Card>}
 
       <ReviewModal result={review ? r : null} mode={review ?? "approve"} onClose={() => setReview(null)} onDone={() => { setReview(null); refresh(); }} />

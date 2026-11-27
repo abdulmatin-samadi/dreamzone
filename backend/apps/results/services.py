@@ -173,48 +173,63 @@ def grade_writing(result_id, *, user, grades):
 
 
 def _recompute(result):
-    """Totals from the answers plus the speaking score (if given). Updates the result in memory; returns pending writing count."""
+    """Totals from the answers plus the speaking / paper-writing scores (if given). Updates the result in memory;
+    returns the pending writing count."""
     t = _totals(result.attempt, _variant_questions(result.attempt))
     pending = t.pop("pending")
-    if result.speaking_score is not None and result.speaking_max:
-        t["total_score"] = q2(t["total_score"] + result.speaking_score)
-        t["max_score"] = q2(t["max_score"] + result.speaking_max)
-        t["percentage"] = q2(t["total_score"] / t["max_score"] * 100) if t["max_score"] else Decimal(0)
-        t["section_scores"]["SPEAKING"] = {
-            "score": float(result.speaking_score), "max": float(result.speaking_max), "correct": 0, "total": 1,
-            "percentage": float(q2(result.speaking_score / result.speaking_max * 100))}
+    for part, section in MANUAL_PARTS.items():
+        score, top = getattr(result, f"{part}_score"), getattr(result, f"{part}_max")
+        if score is None or not top:
+            continue
+        t["total_score"] = q2(t["total_score"] + score)
+        t["max_score"] = q2(t["max_score"] + top)
+        s = t["section_scores"].get(section) or {"score": 0.0, "max": 0.0, "correct": 0, "total": 0}
+        s["score"], s["max"], s["total"] = float(s["score"]) + float(score), float(s["max"]) + float(top), s["total"] + 1
+        s["percentage"] = float(q2(Decimal(str(s["score"])) / Decimal(str(s["max"])) * 100)) if s["max"] else 0.0
+        t["section_scores"][section] = s
+    t["percentage"] = q2(t["total_score"] / t["max_score"] * 100) if t["max_score"] else Decimal(0)
     for k, v in t.items():
         setattr(result, k, v)
     result.passed = result.total_score >= result.examination.passing_score  # the system's suggestion
     return pending
 
 
-def speaking_missing(result):
-    """An upgrade exam with a speaking part whose speaking score nobody has entered yet."""
+MANUAL_PARTS = {"speaking": "SPEAKING", "writing": "WRITING"}  # parts the teacher / admin scores by hand
+
+
+def part_missing(result, part):
+    """An upgrade exam with a speaking / paper-writing part whose score nobody has entered yet."""
     exam = result.examination
-    return exam.kind == ExamKind.UPGRADE and exam.speaking_points > 0 and result.speaking_score is None
+    return exam.kind == ExamKind.UPGRADE and getattr(exam, f"{part}_points") > 0 and getattr(result, f"{part}_score") is None
+
+
+def speaking_missing(result):
+    return part_missing(result, "speaking")
 
 
 @transaction.atomic
-def grade_speaking(result_id, *, user, points, feedback="", max_points=None):
-    """Teacher / admin enters the speaking score; it is added to the total and the suggestion is recomputed."""
+def grade_part(result_id, part, *, user, points, feedback="", max_points=None):
+    """Teacher / admin enters the speaking or paper-writing score; it is added to the total and the suggestion is recomputed."""
     from apps.accounts.models import Role
     from apps.audit.services import record
 
+    if part not in MANUAL_PARTS:
+        raise DomainError("invalid_part", status_code=400)
     result = (ExamResult.objects.select_for_update(of=("self",))
               .select_related("examination", "attempt__variant", "student__user").get(pk=result_id))
     exam = result.examination
     if exam.kind != ExamKind.UPGRADE:
         raise DomainError("not_an_upgrade_exam", status_code=400)
-    top = exam.speaking_points or result.speaking_max
-    if not exam.speaking_points and max_points not in (None, ""):
-        # the exam has no speaking part set: the reviewer says what this speaking was out of
+    exam_top = getattr(exam, f"{part}_points")
+    top = exam_top or getattr(result, f"{part}_max")
+    if not exam_top and max_points not in (None, ""):
+        # the exam has no such part set: the reviewer says what it was out of
         try:
             top = Decimal(str(max_points))
         except ArithmeticError:
             raise DomainError("invalid_points", status_code=400)
     if not top or top <= 0:
-        raise DomainError("speaking_not_set", status_code=400)
+        raise DomainError(f"{part}_not_set", status_code=400)
     if result.approval_status in (ApprovalStatus.APPROVED, ApprovalStatus.REJECTED) and user.role != Role.ADMIN:
         raise DomainError("result_locked")
     try:
@@ -223,18 +238,25 @@ def grade_speaking(result_id, *, user, points, feedback="", max_points=None):
         raise DomainError("invalid_points", status_code=400)
     if points < 0 or points > top:
         raise DomainError("points_out_of_range", status_code=400)
-    result.speaking_score, result.speaking_max = points, top
-    result.speaking_feedback, result.speaking_by, result.speaking_at = str(feedback or "")[:2000], user, timezone.now()
+    setattr(result, f"{part}_score", points)
+    setattr(result, f"{part}_max", top)
+    setattr(result, f"{part}_feedback", str(feedback or "")[:2000])
+    setattr(result, f"{part}_by", user)
+    setattr(result, f"{part}_at", timezone.now())
     _recompute(result)
     if result.approval_status == ApprovalStatus.APPROVED:
         result.passed = True  # a decision already taken stays the decision
     elif result.approval_status == ApprovalStatus.REJECTED:
         result.passed = False
     result.save()
-    record("result.speaking_graded", actor=user, target=result.student, target_type="result",
-           detail={"result": result.pk, "exam": exam.title, "speaking": f"{points:g} / {top:g}",
+    record(f"result.{part}_graded", actor=user, target=result.student, target_type="result",
+           detail={"result": result.pk, "exam": exam.title, part: f"{points:g} / {top:g}",
                    "total": f"{result.total_score:g} / {result.max_score:g}"})
     return result
+
+
+def grade_speaking(result_id, *, user, points, feedback="", max_points=None):
+    return grade_part(result_id, "speaking", user=user, points=points, feedback=feedback, max_points=max_points)
 
 
 # --------------------------------------------------------------------------- placement
@@ -333,6 +355,8 @@ def approve_upgrade(result_id, *, user, note=""):
         raise DomainError("writing_still_pending")
     if speaking_missing(result):
         raise DomainError("speaking_still_pending")
+    if part_missing(result, "writing"):
+        raise DomainError("writing_score_pending")
     if result.student.current_level_id not in (None, exam.level_id):  # no level yet (joined by group code): fine
         raise DomainError("student_level_changed")
     result.approval_status, result.passed = ApprovalStatus.APPROVED, True  # the reviewer's decision is the result
@@ -364,6 +388,8 @@ def reject_upgrade(result_id, *, user, note=""):
         raise DomainError("writing_still_pending")
     if speaking_missing(result):
         raise DomainError("speaking_still_pending")
+    if part_missing(result, "writing"):
+        raise DomainError("writing_score_pending")
     result.approval_status, result.passed = ApprovalStatus.REJECTED, False
     result.reviewed_by, result.reviewed_at, result.review_note = user, timezone.now(), note
     result.save(update_fields=["approval_status", "passed", "reviewed_by", "reviewed_at", "review_note"])

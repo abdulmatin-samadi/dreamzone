@@ -39,6 +39,9 @@ class Examination(models.Model):
     speaking_points = models.DecimalField(
         max_digits=7, decimal_places=2, default=0,
         help_text="Upgrade: points of the oral (speaking) part, scored by the teacher / admin. 0 = no speaking.")
+    writing_points = models.DecimalField(
+        max_digits=7, decimal_places=2, default=0,
+        help_text="Upgrade: points of a writing part done on paper, scored by the teacher / admin. 0 = none.")
     show_correct_answers = models.BooleanField(
         default=False, help_text="Let students see correct answers & explanations after submitting."
     )

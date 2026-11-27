@@ -28,12 +28,14 @@ def _section_score(r, key):
 def _status(r):
     """Passed / C/Passed / Failed. A teacher's / admin's decision on an upgrade wins; otherwise the score decides:
     at or above the pass mark -> Passed, within 10 % of the maximum below it -> C/Passed, lower -> Failed."""
-    if r.writing_pending:
-        return "Pending"
     if r.approval_status == "APPROVED":
         return "Passed"
     if r.approval_status == "REJECTED":
         return "Failed"
+    from .services import part_missing
+
+    if r.writing_pending or part_missing(r, "speaking") or part_missing(r, "writing"):
+        return "Pending"  # a part still waits for the teacher's score
     score, top, mark = float(r.total_score), float(r.max_score), float(r.examination.passing_score)
     if score >= mark:
         return "Passed"
