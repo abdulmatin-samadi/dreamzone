@@ -1,4 +1,4 @@
-import { Marked } from "../lib/marked";
+import { autoMark, Marked } from "../lib/marked";
 import type { AxiosInstance } from "axios";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -441,7 +441,7 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
 
       {listed.length === 0 && (
         <h2 className="mb-4 border-b-2 border-sky-200 pb-2 text-xl font-bold text-slate-900">
-          {(first === last ? t("exam.questionHeading", { n: first, title: "\u0000" }) : t("exam.questionsHeading", { a: first, b: last, title: "\u0000" })).split("\u0000").map((part, i) => i ? <Marked key={i} text={heading + part} /> : part)}
+          {(first === last ? t("exam.questionHeading", { n: first, title: "\u0000" }) : t("exam.questionsHeading", { a: first, b: last, title: "\u0000" })).split("\u0000").map((part, i) => i ? <Marked key={i} text={autoMark(heading) + part} /> : part)}
         </h2>
       )}
       {passageAudio && (
@@ -461,7 +461,7 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
         {listed.length > 0 && (
           <section className={fontClass}>
             <h2 className="mb-4 border-b-2 border-sky-200 pb-2 text-xl font-bold text-slate-900">
-              {(first === last ? t("exam.questionHeading", { n: first, title: "\u0000" }) : t("exam.questionsHeading", { a: first, b: last, title: "\u0000" })).split("\u0000").map((part, i) => i ? <Marked key={i} text={heading + part} /> : part)}
+              {(first === last ? t("exam.questionHeading", { n: first, title: "\u0000" }) : t("exam.questionsHeading", { a: first, b: last, title: "\u0000" })).split("\u0000").map((part, i) => i ? <Marked key={i} text={autoMark(heading) + part} /> : part)}
             </h2>
             <div className="space-y-2">
               {example && (
