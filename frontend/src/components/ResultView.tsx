@@ -110,6 +110,28 @@ function ManualPartBlock({ part, result, onSave, busy, staff }: { part: Part; re
   );
 }
 
+/** The student's points once the result is announced: test part, writing, speaking and the total. */
+function ScoreBreakdown({ result }: { result: ResultDetail }) {
+  const { t } = useTranslation();
+  const s = result.section_scores ?? {};
+  const w = s.WRITING, sp = s.SPEAKING;
+  const total = Number(result.total_score), top = Number(result.max_score);
+  const testScore = total - (w?.score ?? 0) - (sp?.score ?? 0), testMax = top - (w?.max ?? 0) - (sp?.max ?? 0);
+  const rows: [string, number, number][] = [[t("result.testPart"), testScore, testMax]];
+  if (w) rows.push([t("sections.WRITING"), w.score, w.max]);
+  if (sp) rows.push([t("sections.SPEAKING"), sp.score, sp.max]);
+  return (
+    <Card title={t("result.yourScores")}>
+      <ul className="divide-y divide-slate-100 text-sm">
+        {rows.map(([label, score, max]) => (
+          <li key={label} className="flex justify-between py-2"><span>{label}</span><span className="font-semibold tabular-nums">{fmt(score)} / {fmt(max)} {t("exam.points")}</span></li>
+        ))}
+        <li className="flex justify-between py-2 text-base font-bold"><span>{t("result.totalPart")}</span><span className="tabular-nums">{fmt(total)} / {fmt(top)} {t("exam.points")}</span></li>
+      </ul>
+    </Card>
+  );
+}
+
 export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, staff, onSpeaking, onPaperWriting }: {
   result: ResultDetail; onOffer?: (accept: boolean) => void; offerBusy?: boolean; staff?: boolean;  // staff = a teacher / admin / desk looks at someone else's result
   onGrade?: (grades: { question_id: number; points: number; feedback: string }[]) => void; gradeBusy?: boolean;
@@ -154,6 +176,8 @@ export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, sta
         </div>
       </Card>
 
+      {!staff && !noPoints && <ScoreBreakdown result={result} />}
+
       {result.writing_pending && (
         <Card className="border-amber-200 bg-amber-50"><p className="text-sm text-amber-900">{t("result.writingPendingNote")}</p></Card>
       )}
@@ -173,7 +197,7 @@ export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, sta
       </Card>}
 
       {/* the student sees only the outcome: no points, no per-section breakdown, no written answers */}
-      {staff && result.writing?.length > 0 && <WritingBlock items={result.writing} onGrade={onGrade} busy={gradeBusy}
+      {(staff || !noPoints) && result.writing?.length > 0 && <WritingBlock items={result.writing} onGrade={onGrade} busy={gradeBusy}
         whoChecks={staff ? (upgrade ? "result.checkingTeacher" : "result.checkingDesk") : undefined} />}
 
       {result.kind === "UPGRADE" && (Number(result.speaking_points) > 0 || result.speaking_score !== null || !!onSpeaking) && (

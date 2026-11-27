@@ -35,9 +35,10 @@ class ResultListSerializer(serializers.ModelSerializer):
         data = super().to_representation(obj)
         request = self.context.get("request")
         if request is not None and request.user.role == Role.STUDENT:
-            for key in SCORE_FIELDS:  # the student never sees points or right / wrong counts - only the outcome
-                if key in data:
-                    data[key] = None
+            if not announced(obj):
+                for key in SCORE_FIELDS:  # before the result is announced the student sees no points at all
+                    if key in data:
+                        data[key] = None
             if awaiting_decision(obj):
                 data["passed"] = None  # the teacher / admin has not decided yet: the student sees "result awaited"
         return data
@@ -48,6 +49,15 @@ SCORE_FIELDS = (
     "speaking_score", "speaking_max", "section_scores", "passing_score", "speaking_points",
     "writing_score", "writing_max", "writing_points",
 )
+
+
+def announced(result):
+    """The student may see the points: an upgrade once the teacher / admin decided, other exams once fully scored."""
+    if result.writing_pending:
+        return False
+    if result.examination.kind == ExamKind.UPGRADE:
+        return result.approval_status in (ApprovalStatus.APPROVED, ApprovalStatus.REJECTED)
+    return True
 
 
 def awaiting_decision(result):
@@ -105,7 +115,7 @@ class ResultDetailSerializer(ResultListSerializer):
                 continue
             a = saved.get(q.id)
             text = (a.answer.get("text") if a else "") or ""
-            if self.context["request"].user.role == Role.STUDENT:
+            if self.context["request"].user.role == Role.STUDENT and not announced(obj):
                 continue  # no points for the student
             out.append({
                 "question_id": q.id, "prompt": " ".join(x for x in (q.instruction, q.text) if x), "text": text, "max_points": float(q.points),

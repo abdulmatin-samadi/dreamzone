@@ -163,8 +163,11 @@ class SpeakingTests(TestCase):
         self.assertEqual((float(d["total_score"]), float(d["max_score"])), (24.0, 34.0))  # 3 + 6 + 15 of 4 + 10 + 20
         self.assertEqual((d["section_scores"]["WRITING"]["score"], d["section_scores"]["SPEAKING"]["score"]), (15.0, 6.0))
         mine = self.sc.get(url).json()
-        self.assertEqual((mine["writing_score"], mine["writing_points"]), (None, None))  # the student sees no points
+        self.assertEqual((mine["writing_score"], mine["writing_points"]), (None, None))  # no points before the decision
         self.assertEqual(self.tc.post(url + "approve/").status_code, 200)
+        mine = self.sc.get(url).json()  # announced: now the student sees the points
+        self.assertEqual((float(mine["total_score"]), float(mine["writing_score"]), float(mine["speaking_score"])), (24.0, 15.0, 6.0))
+        self.assertEqual(float(self.sc.get(f"{API}/results/").json()["results"][0]["total_score"]), 24.0)
 
 
 class JoinByCodeTests(TestCase):
