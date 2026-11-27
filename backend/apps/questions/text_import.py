@@ -116,7 +116,10 @@ def split_sections(text):
     while i < len(lines):
         line = lines[i].strip()
         i += 1
-        if m := HEAD_NUM.match(line):
+        if (m := HEAD_NUM.match(line)) and _continues_items(cur, int(m.group(1)), line):
+            cur["lines"].append(line)  # "4. Make ______" inside "1. Go ___ / 2. Come ___ ...": an item, not a new exercise
+            continue
+        if m:
             title = m.group(2).strip()
             printed = int(m.group(1))
         elif (m := re.match(r"^\s*(\d{1,2})\s*[.)]\s+(.+)$", line)) and _looks_like_box(m.group(2)) and any(
@@ -140,7 +143,8 @@ def split_sections(text):
             title += " " + nxt
             i += 1
         if printed is None and cur is not None and not _has_items(cur["lines"]) and not WRITING_RE.search(cur["title"]):
-            cur["title"] = (cur["title"] if TERMINAL.search(cur["title"]) else cur["title"] + ".") + " " + title  # subtitle of the section above
+            if title.strip(" .:").lower() != cur["title"].strip(" .:").lower():  # the same heading pasted twice is kept once
+                cur["title"] = (cur["title"] if TERMINAL.search(cur["title"]) else cur["title"] + ".") + " " + title  # subtitle of the section above
         else:
             cur = {"printed": printed, "title": title, "lines": []}
             sections.append(cur)
@@ -152,6 +156,15 @@ def split_sections(text):
             if _has_items(body):
                 sections.append({"printed": None, "title": " ".join(lines[:k]).strip() or "Exercise", "lines": body})
     return sections
+
+
+def _continues_items(cur, number, line):
+    """A numbered line with a blank whose number follows the last item of the current exercise is the next item,
+    even when it starts with a heading word ("4. Make ____", "8. Find ____")."""
+    if cur is None or not BLANK.search(line):
+        return False
+    numbers = [int(m.group(1)) for l in cur["lines"] if (m := ITEM.match(l))]
+    return bool(numbers) and number == numbers[-1] + 1
 
 
 def _has_items(lines):

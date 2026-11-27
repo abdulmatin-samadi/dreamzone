@@ -553,3 +553,17 @@ Write 80-100 words.
         self.assertEqual(w.text, "Write 80-100 words.")
         self.assertEqual(w.instruction, "Writing. Write an email to a friend about your weekend.")   # the task stays in the heading, once
         self.assertEqual(w.options.count(), 0)
+
+
+class NumberedItemsStartingWithHeadingWords(TestCase):
+    """"4. Make ___" / "8. Find ___" inside one list are items, not new exercises."""
+
+    def test_one_exercise_ten_answers(self):
+        from apps.questions.text_import import build
+
+        verbs = ["Go", "Come", "Have", "Make", "See", "Buy", "Say", "Find", "Catch", "Win"]
+        text = "Find the past simple of the VERBS\nFind the past simple of the VERBS\n" + "\n".join(f"{i}. {v} ______" for i, v in enumerate(verbs, 1))
+        report, rows = build(text, "went\ncame\nhad\nmade\nsaw\nbought\nsaid\nfound\ncaught\nwon")
+        self.assertEqual(len(report["sections"]), 1)
+        self.assertEqual(report["sections"][0]["title"], "Find the past simple of the VERBS")
+        self.assertEqual([r["correct"] for r in rows], ["went", "came", "had", "made", "saw", "bought", "said", "found", "caught", "won"])
