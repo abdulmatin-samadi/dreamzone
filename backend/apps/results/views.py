@@ -34,7 +34,9 @@ class ResultViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.G
             return [IsTeacherOrReceptionist()]  # guests' writing -> reception, upgrade writing -> teacher
         if self.action == "grade_writing":
             return [role_permission(Role.TEACHER, Role.RECEPTIONIST, Role.ADMIN)()]  # the admin may score any written answer
-        if self.action in ("approve", "reject", "export", "grade_speaking", "grade_paper_writing"):
+        if self.action in ("approve", "reject"):
+            return [IsAdmin()]  # passed / not passed is the admin's decision; the teacher only scores writing and speaking
+        if self.action in ("export", "grade_speaking", "grade_paper_writing"):
             return [IsAdminOrTeacher()]
         if self.action == "override":
             return [IsAdmin()]

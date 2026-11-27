@@ -78,7 +78,7 @@ class WritingFlowTests(TestCase):
         d = tc.post(url, {"grades": [{"question_id": w.id, "points": 12, "max": 15}]}, format="json").json()
         self.assertEqual((float(d["total_score"]), float(d["max_score"]), d["writing"][0]["max_points"]), (13.0, 16.0, 15.0))
         self.assertEqual(d["approval_status"], "PENDING")
-        self.assertEqual(tc.post(f"{API}/results/{res.id}/reject/").status_code, 200)
+        self.assertEqual(client_for(self.admin).post(f"{API}/results/{res.id}/reject/").status_code, 200)
         self.assertEqual(tc.post(url, {"grades": [{"question_id": w.id, "points": 9}]}, format="json").json()["code"], "result_locked")
 
     def test_placement_decision_waits_for_the_writing_score(self):

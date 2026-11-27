@@ -73,14 +73,15 @@ class UpgradeFlowTests(TestCase):
         self.assertIsNone(detail["answers"])  # key hidden from the student
         self.assertEqual(c.post(f"{API}/results/{rid}/approve/").status_code, 403)  # student cannot approve
 
-        r = self.tc.post(f"{API}/results/{rid}/approve/", {"note": "well done"})
+        self.assertEqual(self.tc.post(f"{API}/results/{rid}/approve/").status_code, 403)  # the teacher scores, the admin decides
+        r = client_for(self.admin).post(f"{API}/results/{rid}/approve/", {"note": "well done"})
         self.assertEqual(r.status_code, 200, r.content)
         self.assertEqual(StudentProfile.objects.get(pk=self.s1.pk).current_level.code, "B2")
         h = LevelChangeHistory.objects.get(student=self.s1)
-        self.assertEqual((h.from_level.code, h.to_level.code, h.reason, h.changed_by), ("B1", "B2", "UPGRADE", self.teacher))
+        self.assertEqual((h.from_level.code, h.to_level.code, h.reason, h.changed_by), ("B1", "B2", "UPGRADE", self.admin))
 
-        # locked: the teacher cannot touch it again, the admin can override and the level is reverted
-        self.assertEqual(self.tc.post(f"{API}/results/{rid}/reject/").json()["code"], "result_locked")
+        # locked: decided once; the admin can override and the level is reverted
+        self.assertEqual(client_for(self.admin).post(f"{API}/results/{rid}/reject/").json()["code"], "result_locked")
         self.assertEqual(self.tc.post(f"{API}/results/{rid}/override/", {"status": "REJECTED", "note": "x"}).status_code, 403)
         ac = client_for(self.admin)
         r = ac.post(f"{API}/results/{rid}/override/", {"status": "REJECTED", "note": "cheating suspected"})
@@ -97,7 +98,7 @@ class UpgradeFlowTests(TestCase):
         self.assertEqual(res.approval_status, ApprovalStatus.PENDING)  # the teacher still decides
         self.assertIsNone(c.get(f"{API}/results/{rid}/").json()["passed"])  # student: "result awaited"
         self.assertTrue(self.tc.get(f"{API}/results/{rid}/").json()["passed"] is False)  # teacher sees the suggestion
-        self.assertEqual(self.tc.post(f"{API}/results/{rid}/reject/", {"note": "Again next month"}).status_code, 200)
+        self.assertEqual(client_for(self.admin).post(f"{API}/results/{rid}/reject/", {"note": "Again next month"}).status_code, 200)
         self.assertFalse(c.get(f"{API}/results/{rid}/").json()["passed"])  # now decided: not passed
         self.assertEqual(StudentProfile.objects.get(pk=self.s2.pk).current_level.code, "B1")
         r = c.post(f"{API}/assignments/{a['id']}/start/")
@@ -112,7 +113,7 @@ class UpgradeFlowTests(TestCase):
         oc = client_for(self.other_teacher)
         self.assertEqual(oc.get(f"{API}/results/").json()["count"], 0)
         self.assertEqual(oc.get(f"{API}/results/{rid}/").status_code, 404)
-        self.assertEqual(oc.post(f"{API}/results/{rid}/approve/").status_code, 404)
+        self.assertIn(oc.post(f"{API}/results/{rid}/approve/").status_code, (403, 404))
         self.assertEqual(oc.get(f"{API}/examinations/{exam['id']}/").status_code, 404)
         self.assertEqual(oc.get(f"{API}/students/").json()["count"], 0)
         # cannot assign to someone else's group / students

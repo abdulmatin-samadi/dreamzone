@@ -31,7 +31,7 @@ export default function ResultDetailPage() {
   const role = user!.role;
   // upgrade: the buttons are always there until the decision; they wait for the writing / speaking scores first
   const undecided = r.kind === "UPGRADE" && !["APPROVED", "REJECTED"].includes(r.approval_status);
-  const canReview = (role === "ADMIN" || role === "TEACHER") && undecided;
+  const canReview = role === "ADMIN" && undecided;  // the teacher scores writing / speaking, the admin decides
   const waitFor = r.writing_pending ? "writing_still_pending"
     : Number(r.writing_points) > 0 && r.writing_score == null ? "writing_score_pending"
     : Number(r.speaking_points) > 0 && r.speaking_score == null ? "speaking_still_pending" : "";

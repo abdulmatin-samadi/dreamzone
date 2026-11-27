@@ -151,7 +151,7 @@ export default function ResultsPage({ mode = "all" }: { mode?: "all" | "approval
             <Td><ApprovalBadge status={r.approval_status} /></Td>
             <Td className="whitespace-nowrap">{fmtDate(r.created_at)}</Td>
             <Td className="whitespace-nowrap text-right">
-              {staff && r.approval_status === "PENDING" && <>
+              {user!.role === "ADMIN" && r.approval_status === "PENDING" && <>
                 <Button size="sm" variant="success" className="mr-2" onClick={() => setReview({ r, mode: "approve" })}>{t("approvals.approve")}</Button>
                 <Button size="sm" variant="danger" onClick={() => setReview({ r, mode: "reject" })}>{t("approvals.reject")}</Button></>}
             </Td>

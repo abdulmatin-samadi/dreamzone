@@ -130,7 +130,7 @@ class SpeakingTests(TestCase):
 
     def test_speaking_added_to_total_and_required_before_decision(self):
         url = f"{API}/results/{self.rid}/"
-        self.assertEqual(self.tc.post(url + "approve/").json()["code"], "speaking_still_pending")
+        self.assertEqual(self.ac.post(url + "approve/").json()["code"], "speaking_still_pending")
         self.assertEqual(self.sc.post(url + "speaking/", {"points": 5}).status_code, 403)  # not the student
         self.assertEqual(self.tc.post(url + "speaking/", {"points": 11}).json()["code"], "points_out_of_range")
         d = self.tc.post(url + "speaking/", {"points": 6, "feedback": "Good fluency"}).json()
@@ -139,7 +139,7 @@ class SpeakingTests(TestCase):
         self.assertEqual(d["section_scores"]["SPEAKING"]["score"], 6.0)
         d = self.ac.post(url + "speaking/", {"points": 4}).json()  # the admin corrects it
         self.assertEqual((float(d["total_score"]), d["passed"]), (7.0, False))
-        self.assertEqual(self.tc.post(url + "reject/").status_code, 200)
+        self.assertEqual(self.ac.post(url + "reject/").status_code, 200)
         self.assertEqual(self.tc.post(url + "speaking/", {"points": 9}).json()["code"], "result_locked")
 
     def test_exam_without_speaking_points_takes_the_max_from_the_reviewer(self):
@@ -149,14 +149,14 @@ class SpeakingTests(TestCase):
         self.assertEqual(self.tc.post(url, {"points": 5}).json()["code"], "speaking_not_set")
         d = self.tc.post(url, {"points": 5, "max": 10}).json()
         self.assertEqual((float(d["total_score"]), float(d["max_score"]), float(d["speaking_max"])), (8.0, 14.0, 10.0))
-        self.assertEqual(self.tc.post(f"{API}/results/{self.rid}/approve/").status_code, 200)  # no speaking required
+        self.assertEqual(self.ac.post(f"{API}/results/{self.rid}/approve/").status_code, 200)  # no speaking required
 
     def test_paper_writing_points_added_and_required_before_decision(self):
         self.exam.writing_points = 20
         self.exam.save()
         url = f"{API}/results/{self.rid}/"
         self.tc.post(url + "speaking/", {"points": 6})
-        self.assertEqual(self.tc.post(url + "approve/").json()["code"], "writing_score_pending")
+        self.assertEqual(self.ac.post(url + "approve/").json()["code"], "writing_score_pending")
         self.assertEqual(self.sc.post(url + "writing-score/", {"points": 5}).status_code, 403)  # not the student
         self.assertEqual(self.tc.post(url + "writing-score/", {"points": 21}).json()["code"], "points_out_of_range")
         d = self.tc.post(url + "writing-score/", {"points": 15, "feedback": "Good ideas"}).json()
@@ -164,7 +164,7 @@ class SpeakingTests(TestCase):
         self.assertEqual((d["section_scores"]["WRITING"]["score"], d["section_scores"]["SPEAKING"]["score"]), (15.0, 6.0))
         mine = self.sc.get(url).json()
         self.assertEqual((mine["writing_score"], mine["writing_points"]), (None, None))  # no points before the decision
-        self.assertEqual(self.tc.post(url + "approve/").status_code, 200)
+        self.assertEqual(self.ac.post(url + "approve/").status_code, 200)
         mine = self.sc.get(url).json()  # announced: now the student sees the points
         self.assertEqual((float(mine["total_score"]), float(mine["writing_score"]), float(mine["speaking_score"])), (24.0, 15.0, 6.0))
         self.assertEqual(float(self.sc.get(f"{API}/results/").json()["results"][0]["total_score"]), 24.0)
