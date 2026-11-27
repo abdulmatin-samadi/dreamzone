@@ -237,6 +237,21 @@ export function ResultView({ result, onOffer, offerBusy, onGrade, gradeBusy, sta
         </Card>
       )}
 
+      {/* the student: the verdict and the total at the bottom of the page */}
+      {!staff && upgrade && (() => {
+        const decided = !result.writing_pending && (result.approval_status === "APPROVED" || result.approval_status === "REJECTED");
+        const ok = result.approval_status === "APPROVED";
+        return (
+          <div className={cx("rounded-2xl border-2 p-5 text-center", !decided ? "border-amber-300 bg-amber-50" : ok ? "border-emerald-300 bg-emerald-50" : "border-red-300 bg-red-50")}>
+            <p className={cx("text-2xl font-bold", !decided ? "text-amber-700" : ok ? "text-emerald-700" : "text-red-700")}>
+              {!decided ? `… ${t("history.awaited")}` : ok ? `✓ ${t("history.movedUp", { level: result.target_level_code })}` : `✗ ${t("history.stays", { level: result.level_code })}`}
+            </p>
+            {decided && !noPoints && <p className="mt-2 text-lg font-semibold text-slate-800">{t("result.totalScore")}: {fmt(result.total_score)} / {fmt(result.max_score)} {t("exam.points")}</p>}
+            {decided && result.review_note && <p className="mt-2 text-sm text-slate-600">“{result.review_note}”</p>}
+          </div>
+        );
+      })()}
+
       {staff && upgrade && !result.writing_pending && (
         <Card title={t("result.upgradeStatus")}>
           {result.approval_status === "NOT_REQUIRED"  // an older result decided by the score alone
