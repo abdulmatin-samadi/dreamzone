@@ -585,3 +585,17 @@ class SentenceChoiceTests(TestCase):
         report, rows = build(text, "Nothing like this\nDo you like your job\nThey would like something\nI don\u2019t need any stamps")
         self.assertEqual(report["sections"][0]["questions"][0]["status"], "bad")
         self.assertEqual(len(rows), 3)
+
+
+class HighlightTests(TestCase):
+    """**words** in a heading are kept for the yellow highlight; a first item starting with a heading word is an item."""
+
+    def test_marked_heading_and_first_item(self):
+        from apps.questions.text_import import build
+
+        text = ("1. Complete with the preposition - **in, at, or on**.\nExample: I get up at 8:00.\n1. There are pictures ____ the wall.\n\n"
+                "2. Complete with **me, you, him**.\n2. Look at ____!\n3. Don't drink ____.")
+        report, rows = build(text, "on\n\nme\nit")
+        self.assertEqual([len(s["questions"]) for s in report["sections"]], [1, 2])
+        self.assertTrue(rows[0]["instruction"].startswith("Complete with the preposition - **in, at, or on**."))
+        self.assertEqual([r["correct"] for r in rows], ["on", "me", "it"])

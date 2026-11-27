@@ -105,7 +105,7 @@ def _looks_like_box(text):
 
 
 KEYWORD_START = re.compile(rf"^\s*{KEYWORDS}\b", re.I)
-TERMINAL = re.compile(r"[.:?!)\]]$")
+TERMINAL = re.compile(r"[.:?!)\]](?:\*\*)?$")  # a highlighted "**...**" ending still ends the line
 
 
 def split_sections(text):
@@ -164,7 +164,9 @@ def _continues_items(cur, number, line):
     if cur is None or not BLANK.search(line):
         return False
     numbers = [int(m.group(1)) for l in cur["lines"] if (m := ITEM.match(l))]
-    return bool(numbers) and number == numbers[-1] + 1
+    if not numbers:
+        return True  # the first numbered line with a blank right under a heading is its first item ("3. Look at ____!")
+    return number == numbers[-1] + 1
 
 
 def _has_items(lines):

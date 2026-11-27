@@ -12,6 +12,7 @@ import { useNotify } from "../components/Toast";
 import { Badge, BarList, Button, Card, Checkbox, ConfirmDialog, EmptyState, Input, Modal, PageHeader, PageLoader, Pagination, ProgressBar, SearchInput, Select, StatCard, Table, Tabs, Td, Textarea } from "../components/ui";
 import { fmtDate, fromLocalInput, num, useAll, useGet, useList } from "../lib/hooks";
 import { QuestionModal } from "./QuestionsPage";
+import { Marked } from "../lib/marked";
 
 /* ------------------------------------------------------------------ settings */
 function SettingsTab({ exam }: { exam: Exam }) {
@@ -201,6 +202,7 @@ function TextImportModal({ variant, onClose, onDone }: { variant: Variant | null
   const notify = useNotify();
   const [text, setText] = useState("");
   const [answers, setAnswers] = useState("");
+  const [hlHint, setHlHint] = useState(false);
   const [preview, setPreview] = useState<{ sections: PreviewSection[]; ready: number } | null>(null);
   const [audio, setAudio] = useState<File | null>(null);
   const [busy, setBusy] = useState<"check" | "save" | null>(null);
@@ -225,7 +227,19 @@ function TextImportModal({ variant, onClose, onDone }: { variant: Variant | null
       <p className="text-sm text-slate-600">{t("textImport.hint")}</p>
       <div className="mt-3 flex flex-wrap gap-1.5">{["GAP", "GAPTEXT", "READQA", "LISTEN", "WRITING", "MCQ", "TICK", "MISTAKE", "ODD", "WORDFORM", "DIALOGUE", "TFREAD"].map((c) => <Badge key={c} tone="blue">{t(`categories.${c}`)}</Badge>)}</div>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <Textarea rows={14} label={t("textImport.testText")} value={text} onChange={(e) => { setText(e.target.value); setPreview(null); }} placeholder={"1. Complete the sentences.\n2 My sisters ______ both pretty.\n3 Rosie ______ only ten.\n\n2. Tick the correct sentence.\n1 ☐ I like leave early.\n☐ I'd like to leave early."} />
+        <div>
+        <div className="mb-1 flex items-center justify-end gap-2">
+          {hlHint && <span className="text-xs text-amber-700">{t("textImport.highlightSelect")}</span>}
+          <Button size="sm" variant="secondary" title={t("textImport.highlightHint")} onClick={() => {
+            const el = document.getElementById("ti-text") as HTMLTextAreaElement | null;
+            if (!el || el.selectionStart === el.selectionEnd) { setHlHint(true); return; }
+            setHlHint(false);
+            const a = el.selectionStart, b = el.selectionEnd;
+            setText(text.slice(0, a) + "**" + text.slice(a, b) + "**" + text.slice(b)); setPreview(null);
+          }}>🖍 {t("textImport.highlight")}</Button>
+        </div>
+        <Textarea id="ti-text" rows={14} label={t("textImport.testText")} value={text} onChange={(e) => { setText(e.target.value); setPreview(null); }} placeholder={"1. Complete the sentences.\n2 My sisters ______ both pretty.\n3 Rosie ______ only ten.\n\n2. Tick the correct sentence.\n1 ☐ I like leave early.\n☐ I'd like to leave early."} />
+        </div>
         <Textarea rows={14} label={t("textImport.answers")} value={answers} onChange={(e) => { setAnswers(e.target.value); setPreview(null); }} hint={t("textImport.answersHint")} placeholder={"are, is\n\nB\n\n(1-bo'lim, bo'sh qator, 2-bo'lim, ...)"} />
       </div>
       <label className="mt-4 block text-sm text-slate-600">
@@ -240,7 +254,7 @@ function TextImportModal({ variant, onClose, onDone }: { variant: Variant | null
           {preview.sections.map((s) => (
             <section key={s.index} className="rounded-xl border border-slate-200">
               <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-sky-50/60 px-4 py-2 text-sm">
-                <span className="font-semibold">{s.index}. {s.title}</span><Badge tone="indigo">{t(`categories.${s.category}`)}</Badge>
+                <span className="font-semibold">{s.index}. <Marked text={s.title} /></span><Badge tone="indigo">{t(`categories.${s.category}`)}</Badge>
               </header>
               {s.questions.length === 0 ? <p className="px-4 py-3 text-sm text-amber-700">{t("textImport.noQuestions")}</p> : (
                 <ul className="divide-y divide-slate-100 text-sm">

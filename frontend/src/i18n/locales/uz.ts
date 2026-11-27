@@ -59,7 +59,7 @@ const uz: Dict<typeof en> = {
     nothing: "Hech narsa taniy olmadim. Har bir mashqning sarlavhasi ko'rsatma so'zi bilan boshlanishi kerak (Complete, Put, Choose, Tick, Find, Write, Read…), keyin raqamlangan savollari turadi. Masalan: «1. Complete the sentences.»",
     button: "Matn tashlash", title: "Test matnini tashlash", check: "Tekshirish", save: "{{n}} ta savolni saqlash", saved: "{{n}} ta savol qo'shildi.",
     hint: "Testni PDF/Word faylingizdan nusxalab, chap tomonga tashlang. Javoblarni o'ng tomonga yozing: har bir mashq uchun bitta blok, test bilan bir xil tartibda, bloklar bo'sh qator bilan ajratiladi (masalan «are, is, has» yoki «B, A, A», «do - did», «True, False»). Mashq turi sarlavhasidan o'zi aniqlanadi.",
-    testText: "Test matni (nusxalanganidek)", answers: "Javoblar (alohida joy)", answersHint: "Mashqlar tartibida. Mashqlar orasini bo'sh qator bilan ajrating.",
+    highlight: "Sariq belgilash", highlightHint: "Matndagi so'zlarni sichqoncha bilan belgilang va bosing: imtihonda ular sariq rangda chiqadi (masalan, «in, at, or on»).", highlightSelect: "Avval sariq qilinadigan so'zlarni sichqoncha bilan belgilang.", testText: "Test matni (nusxalanganidek)", answers: "Javoblar (alohida joy)", answersHint: "Mashqlar tartibida. Mashqlar orasini bo'sh qator bilan ajrating.",
     found: "{{sections}} ta mashq aniqlandi, {{n}} ta savol tayyor.", noQuestions: "Bu mashqdan savol topilmadi.", noAnswer: "javob yo'q",
   },
   kinds: { PLACEMENT: "Saralash testi", UPGRADE: "Darajani oshirish" },

@@ -54,7 +54,7 @@ const en = {
     nothing: "Nothing was recognised. Every exercise needs a heading line that starts with an instruction word (Complete, Put, Choose, Tick, Find, Write, Read…) followed by its numbered items, e.g. “1. Complete the sentences.”",
     button: "Paste text", title: "Paste the test text", check: "Check", save: "Save {{n}} questions", saved: "{{n}} questions added.",
     hint: "Copy the test from your PDF/Word file and paste it on the left. Put the answers on the right: one block per exercise, in the same order, blocks separated by an empty line (e.g. “are, is, has” or “B, A, A”, “do - did”, “True, False”). The exercise type is recognised from its heading.",
-    testText: "Test text (as copied)", answers: "Answers (separate box)", answersHint: "Same order as the exercises. Separate exercises with an empty line.",
+    highlight: "Highlight", highlightHint: "Select words in the text and press: in the exam they are shown in yellow (e.g. «in, at, or on»).", highlightSelect: "First select the words to highlight.", testText: "Test text (as copied)", answers: "Answers (separate box)", answersHint: "Same order as the exercises. Separate exercises with an empty line.",
     found: "{{sections}} exercises recognised, {{n}} questions ready.", noQuestions: "No questions recognised in this exercise.", noAnswer: "no answer",
   },
   kinds: { PLACEMENT: "Placement test", UPGRADE: "Level upgrade" },
