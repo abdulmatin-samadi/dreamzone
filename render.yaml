@@ -35,8 +35,8 @@ services:
         fromDatabase: { name: dreamzone-db, property: user }
       - key: DB_PASSWORD
         fromDatabase: { name: dreamzone-db, property: password }
-      - key: FRONTEND_HOST
-        fromService: { type: web, name: dreamzone-web, property: host }
+      - key: FRONTEND_HOST  # the website's public address (Render's "host" property is only the internal name)
+        value: dreamzone-web.onrender.com
 
   - type: web
     name: dreamzone-web
@@ -46,7 +46,7 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        fromService: { type: web, name: dreamzone-api, property: host }
+        value: https://dreamzone-api.onrender.com
     routes:
       - type: rewrite
         source: /*
