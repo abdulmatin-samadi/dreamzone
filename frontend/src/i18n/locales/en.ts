@@ -171,6 +171,7 @@ const en = {
     fs: {
       stoppedDesk: "The test was stopped because full-screen mode was left. Answers are saved. To continue, use the «Stopped examinations» list above.",
       rule: "The test opens in full-screen mode. If you leave full screen or switch to another tab you have 10 seconds to come back, otherwise the test is stopped and your teacher decides what happens next.",
+      homeScreen: "For full screen on iPhone: in Safari tap «Share» (□↑) → «Add to Home Screen» → «Add». Then open Dreamzone from the icon on your home screen: it opens on the whole screen, without the browser bars.",
       unsupported: "This browser cannot show the test in full screen. Keep this page open and in front: if you switch to another app or tab for more than 10 seconds, the test is stopped.",
       bodyNoFs: "You left the test page. Come back within {{n}} seconds or the test will be stopped.", returnNoFs: "Back to the test",
       title: "Return to full screen", body: "You left full-screen mode. Return within {{n}} seconds or the test will be stopped.", return: "Return to full screen",

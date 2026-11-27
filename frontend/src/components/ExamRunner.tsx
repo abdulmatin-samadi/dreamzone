@@ -172,6 +172,9 @@ export const fullscreenSupported = () => {
   const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
   return !!(el.requestFullscreen || el.webkitRequestFullscreen);
 };
+/** Opened from the home screen as an app (no browser bars around the page). */
+export const runningAsApp = () => (navigator as Navigator & { standalone?: boolean }).standalone === true
+  || window.matchMedia?.("(display-mode: fullscreen), (display-mode: standalone)").matches === true;
 export const inFullscreen = () => !!(document.fullscreenElement || (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement);
 export async function enterFullscreen(): Promise<boolean> {
   const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };

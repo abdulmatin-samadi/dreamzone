@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import type { AttemptPayload, MyAssignment, ResultDetail } from "../api/types";
 import { fmtDate } from "../lib/hooks";
-import { ExamRunner, enterFullscreen, fullscreenSupported } from "./ExamRunner";
+import { ExamRunner, enterFullscreen, fullscreenSupported, runningAsApp } from "./ExamRunner";
 import { ResultView } from "./ResultView";
 import { useNotify } from "./Toast";
 import { Button, Card, PageLoader } from "./ui";
@@ -51,6 +51,7 @@ function Instructions({ api, assignmentId, onStarted, onExit }: { api: AxiosInst
       </ul>
       <div className={`mt-4 rounded-xl border px-4 py-3 text-sm ${fullscreenSupported() ? "border-blue-200 bg-blue-50 text-blue-900" : "border-amber-300 bg-amber-50 font-medium text-amber-800"}`}>
         {fullscreenSupported() ? t("exam.fs.rule") : `⚠ ${t("exam.fs.unsupported")}`}
+        {!fullscreenSupported() && !runningAsApp() && <p className="mt-2 font-normal">{t("exam.fs.homeScreen")}</p>}
       </div>
       <div className="mt-6 flex flex-wrap gap-3">
         <Button size="lg" disabled={!startable} loading={busy} onClick={start}>{a.state === "in_progress" ? t("exam.continue") : t("exam.start")}</Button>

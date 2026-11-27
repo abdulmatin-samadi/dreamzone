@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- opened from the phone's home screen the site runs as an app: no browser bars (iPhone has no fullscreen for web pages) -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Dreamzone" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="theme-color" content="#0b1e3f" />
     <title>Dreamzone — Placement &amp; Exams</title>
     <script>
       try { if (localStorage.getItem("dz_theme") === "dark") document.documentElement.classList.add("dark"); } catch (e) { /* storage blocked */ }
