@@ -176,7 +176,7 @@ const en = {
       saved: "All your answers are saved.", stopped: "The test was stopped because you left full-screen mode. Your answers are saved; your teacher will decide whether you continue.",
     },
     writeHere: "Write your answer here…", wordCount: "{{n}} words", listen: "Listen to the recording",
-    example: "Example", questionsHeading: "Questions {{a}}–{{b}}: {{title}}", questionHeading: "Question {{n}}: {{title}}", submitTest: "Submit test", fontSize: "Text size",
+    example: "Example", stage: { test: "Test", reading: "Reading", writing: "Writing", goTo: "Go to {{part}}", backTo: "Back to {{part}}" }, questionsHeading: "Questions {{a}}–{{b}}: {{title}}", questionHeading: "Question {{n}}: {{title}}", submitTest: "Submit test", fontSize: "Text size",
     level: "Level", duration: "Duration", questions: "Questions", passingScore: "Passing score", points: "pts", availableFrom: "Available from", availableUntil: "Available until",
     start: "Start examination", continue: "Continue examination", viewInstructions: "Instructions & start", backToExams: "Back to my examinations",
     rule1: "You can take this examination only once. There is no retake.", rule2: "Your answers are saved automatically. If the page reloads you continue with the remaining time.",

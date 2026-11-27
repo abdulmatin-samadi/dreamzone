@@ -35,6 +35,14 @@ function buildPages(questions: AttemptQuestion[]): Page[] {
   return pages;
 }
 
+/** The exam goes in parts: the test first, then reading (and listening), then writing - each opened with a button. */
+const STAGE_KEYS = ["exam.stage.test", "exam.stage.reading", "exam.stage.writing"];
+function stageOf(p: Page): number {
+  if (p.qs.some((q) => q.type === "WRITING")) return 2;
+  if (p.passage || p.qs.some((q) => ["READING", "LISTENING"].includes(q.section) || ["TFREAD", "READQA", "LISTEN"].includes(q.category ?? ""))) return 1;
+  return 0;
+}
+
 const FONT = ["text-lg", "text-xl", "text-2xl"];  // compact enough for ~7 questions on a screen; A+ goes larger
 const BLANK = /_{2,}|\.{4,}/;  // a blank inside a sentence: the answer box goes right there
 
@@ -210,6 +218,9 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
   const [data, setData] = useState<AttemptPayload | null>(null);
   const [answers, setAnswers] = useState<Record<number, Answer>>({});
   const [pageIdx, setPageIdx] = useState(0);
+  const stageKey = `dz-stage-${attemptId}`;
+  const [stage, setStageRaw] = useState<number>(() => { try { return Number(sessionStorage.getItem(stageKey) ?? 0) || 0; } catch { return 0; } });
+  const setStage = (n: number) => { setStageRaw(n); try { sessionStorage.setItem(stageKey, String(n)); } catch { /* storage blocked */ } };
   const [font, setFont] = useState(0);
   const [offset, setOffset] = useState(0);
   const [now, setNow] = useState(Date.now());
@@ -393,8 +404,18 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
     </div>
   );
   if (!data) return <PageLoader />;
-  const pages = buildPages(data.questions);
-  const numberOf = (q: AttemptQuestion) => data.questions.findIndex((x) => x.id === q.id) + 1;
+  // the parts in their order (test, reading, writing); the numbers run 1, 2, 3 ... in that order
+  const pages = buildPages(data.questions).sort((a, b) => stageOf(a) - stageOf(b));
+  const ordered = pages.flatMap((p) => p.qs);
+  const numberOf = (q: AttemptQuestion) => ordered.findIndex((x) => x.id === q.id) + 1;
+  const stages = [...new Set(pages.map(stageOf))].sort();
+  const curStage = stages.includes(stage) ? stage : stages[0];
+  const nextStage = stages[stages.indexOf(curStage) + 1];
+  const prevStage = stages[stages.indexOf(curStage) - 1];
+  const goStage = (n: number, then?: () => void) => {
+    setStage(n);
+    setTimeout(() => (then ? then() : scrollRef.current?.scrollTo({ top: 0 })), 60);
+  };
   const answeredCount = data.questions.filter((x) => isAnswered(x, answers[x.id])).length;
   const unanswered = data.questions.length - answeredCount;
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0"), ss = String(remaining % 60).padStart(2, "0");
@@ -413,7 +434,7 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
     const gapQs = new Map<number, AttemptQuestion>();
     if (page.passage) page.qs.forEach((q) => { if (q.gap_no && page.passage!.text.includes(`[[${q.gap_no}]]`)) gapQs.set(q.gap_no, q); });
     const listed = page.qs.filter((q) => !(q.gap_no && gapQs.get(q.gap_no) === q));
-    const first = page.numbers[0], last = page.numbers[page.numbers.length - 1];
+    const first = numberOf(page.qs[0]), last = numberOf(page.qs[page.qs.length - 1]);
     const cat = page.qs[0].category;
     // "Complete ... — Example: I get up at 8:00.": the example is shown as a sample row among the questions, not in the heading
     const [instruction, example] = splitExample(page.qs[0].instruction ?? "");
@@ -513,20 +534,40 @@ export function ExamRunner({ api, attemptId, onFinished, onStopped }: { api: Axi
       </header>
 
       {/* every exercise one after another: the numbers keep going 1, 2, 3 ... down the page */}
-      {pages.map(renderPage)}
+      {pages.map((pg, i) => (stageOf(pg) === curStage ? renderPage(pg, i) : null))}
+
+      {/* end of a part: the button to the next one (and back) */}
+      {stages.length > 1 && (
+        <div className="mb-8 flex flex-col items-center gap-3">
+          {nextStage !== undefined && (
+            <button onClick={() => goStage(nextStage)}
+              className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-8 py-4 text-lg font-bold text-on-accent shadow-lg transition hover:brightness-110 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300">
+              {t("exam.stage.goTo", { part: t(STAGE_KEYS[nextStage]) })} →
+            </button>
+          )}
+          {prevStage !== undefined && (
+            <button onClick={() => goStage(prevStage)} className="text-sm font-medium text-slate-500 hover:text-slate-800 hover:underline">
+              ← {t("exam.stage.backTo", { part: t(STAGE_KEYS[prevStage]) })}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* bottom bar: question numbers, font size and submit — always in reach, out of the questions' way */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 shadow-[0_-4px_16px_rgba(15,23,42,0.08)] backdrop-blur">
         <div className="mx-auto flex max-w-[96rem] items-center gap-3 px-4 py-2 sm:px-6">
           <nav className="max-h-[3.75rem] min-w-0 flex-1 overflow-y-auto py-1" aria-label={t("exam.navigator")}>
             <div className="flex flex-wrap gap-1">
-              {data.questions.map((x, i) => {
+              {ordered.map((x, i) => {
                 const pi = pages.findIndex((p) => p.qs.some((y) => y.id === x.id));
                 return (
                   <button key={x.id} onClick={() => {
                     // the first question of an exercise: show its heading too; otherwise the question itself near the top
-                    const target = pages[pi]?.qs[0]?.id === x.id ? null : document.getElementById(`q-${x.id}`);
-                    (target ?? document.getElementById(`pg-${pi}`))?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    const jump = () => {
+                      const target = pages[pi]?.qs[0]?.id === x.id ? null : document.getElementById(`q-${x.id}`);
+                      (target ?? document.getElementById(`pg-${pi}`))?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    };
+                    if (stageOf(pages[pi]) !== curStage) goStage(stageOf(pages[pi]), jump); else jump();
                   }} aria-label={`${i + 1}`}
                     className={cx("h-6 min-w-6 rounded px-1 text-[11px] font-semibold tabular-nums", pi === pageIdx && "ring-2 ring-blue-500 ring-offset-1",
                       isAnswered(x, answers[x.id]) ? "bg-blue-600 text-on-accent" : "bg-slate-100 text-slate-600 hover:bg-slate-200")}>{i + 1}</button>

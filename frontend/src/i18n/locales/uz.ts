@@ -181,7 +181,7 @@ const uz: Dict<typeof en> = {
       saved: "Barcha javoblaringiz saqlangan.", stopped: "To'liq ekrandan chiqqaningiz uchun imtihon to'xtatildi. Javoblaringiz saqlandi; davom ettirishni o'qituvchi hal qiladi.",
     },
     writeHere: "Javobingizni shu yerga yozing…", wordCount: "{{n}} ta so'z", listen: "Yozuvni tinglang",
-    questionsHeading: "{{a}}–{{b}}-savollar: {{title}}", example: "Misol", questionHeading: "{{n}}-savol: {{title}}", submitTest: "Testni topshirish", fontSize: "Harf o'lchami",
+    stage: { test: "Test", reading: "Reading", writing: "Writing", goTo: "{{part}}'ga o'tish", backTo: "{{part}} bo'limiga qaytish" }, questionsHeading: "{{a}}–{{b}}-savollar: {{title}}", example: "Misol", questionHeading: "{{n}}-savol: {{title}}", submitTest: "Testni topshirish", fontSize: "Harf o'lchami",
     level: "Daraja", duration: "Davomiyligi", questions: "Savollar", passingScore: "O'tish bali", points: "ball", availableFrom: "Boshlanishi", availableUntil: "Tugashi",
     start: "Imtihonni boshlash", continue: "Imtihonni davom ettirish", viewInstructions: "Ko'rsatma va boshlash", backToExams: "Imtihonlarimga qaytish",
     rule1: "Bu imtihonni faqat bir marta topshirish mumkin. Qayta topshirish yo'q.", rule2: "Javoblaringiz avtomatik saqlanadi. Sahifa yangilansa, qolgan vaqt bilan davom etasiz.",
